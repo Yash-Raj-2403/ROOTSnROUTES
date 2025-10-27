@@ -84,7 +84,13 @@ const ARVRPreviewPage = () => {
         <section className="py-12 bg-gradient-to-br from-background via-muted/5 to-background">
           <div className="container mx-auto px-6">
             <div className="max-w-7xl mx-auto">
-              <ExploreARVRSimple category="all" />
+              <ExploreARVRSimple 
+                category="all"
+                onBack={() => {
+                  // Scroll back to top of page
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             </div>
           </div>
         </section>

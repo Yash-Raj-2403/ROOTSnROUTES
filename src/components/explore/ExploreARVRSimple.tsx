@@ -34,15 +34,17 @@ declare global {
       'a-camera': any;
       'a-entity': any;
       'a-marker': any;
+      'model-viewer': any;
     }
   }
 }
 
 interface ExploreARVRSimpleProps {
   category?: 'destinations' | 'marketplace' | 'restaurants' | 'hotels' | 'all';
+  onBack?: () => void; // Optional callback to navigate back
 }
 
-const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all' }) => {
+const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all', onBack }) => {
   const [isVRActive, setIsVRActive] = useState(false);
   const [isARActive, setIsARActive] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -51,55 +53,92 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all' 
   const [selectedExperience, setSelectedExperience] = useState<string>('destination');
   const sceneRef = useRef<HTMLDivElement>(null);
 
-  // Sample AR/VR content
+  // Sample AR/VR content with proper panorama URLs and better 3D models
   const experiences = {
     destination: {
       title: '🏔️ Betla National Park',
-      description: 'Experience the wildlife sanctuary in immersive VR',
-      panoramaUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=2048&h=1024&fit=crop',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf'
+      description: 'Experience the wildlife sanctuary in immersive VR with 360° forest views',
+      panoramaUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
+      arModel: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+      category: 'Nature & Wildlife'
     },
     marketplace: {
       title: '🎨 Dokra Art Gallery',
-      description: 'Explore traditional brass artifacts in 3D',
-      panoramaUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=2048&h=1024&fit=crop',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf'
+      description: 'Explore traditional brass artifacts in 3D with virtual marketplace tour',
+      panoramaUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
+      arModel: 'https://modelviewer.dev/shared-assets/models/Horse.glb',
+      category: 'Art & Crafts'
     },
     restaurant: {
       title: '🍽️ Traditional Kitchen',
-      description: 'Virtual tour of authentic Jharkhandi cuisine',
-      panoramaUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=2048&h=1024&fit=crop',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf'
+      description: 'Virtual tour of authentic Jharkhandi cuisine and dining experience',
+      panoramaUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
+      arModel: 'https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb',
+      category: 'Food & Dining'
     },
     hotel: {
       title: '🏨 Heritage Stay',
-      description: 'Preview luxury accommodations in VR',
-      panoramaUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=2048&h=1024&fit=crop',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf'
+      description: 'Preview luxury accommodations in VR with 360° room tours',
+      panoramaUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
+      arModel: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
+      category: 'Accommodation'
     }
   };
 
-  // Load A-Frame dynamically
+  // Load A-Frame and Model Viewer dynamically
   useEffect(() => {
-    const loadAFrame = async () => {
+    const loadLibraries = async () => {
       try {
         if (typeof window !== 'undefined' && !window.AFRAME) {
           // Load A-Frame core
           await import('aframe');
           console.log('✅ A-Frame loaded successfully');
-          setAframeLoaded(true);
         } else if (window.AFRAME) {
-          setAframeLoaded(true);
           console.log('✅ A-Frame already loaded');
         }
+        
+        // Load model-viewer for AR
+        if (!customElements.get('model-viewer')) {
+          const modelViewerScript = document.createElement('script');
+          modelViewerScript.type = 'module';
+          modelViewerScript.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js';
+          document.head.appendChild(modelViewerScript);
+          console.log('✅ Model Viewer script added');
+        }
+        
+        setAframeLoaded(true);
       } catch (error) {
-        console.error('❌ Failed to load A-Frame:', error);
+        console.error('❌ Failed to load libraries:', error);
         // Still set as loaded to show the interface
         setAframeLoaded(true);
       }
     };
 
-    loadAFrame();
+    loadLibraries();
+    
+    // Cleanup function when component unmounts
+    return () => {
+      console.log('🧹 Cleaning up AR/VR component');
+      try {
+        // Clean up VR scene if active
+        const scene = document.querySelector('a-scene');
+        if (scene && scene.is?.('vr-mode')) {
+          scene.exitVR();
+        }
+        
+        // Clean up AR if active
+        const modelViewer = document.querySelector('model-viewer') as any;
+        if (modelViewer && typeof modelViewer.dismissAR === 'function') {
+          modelViewer.dismissAR();
+        }
+      } catch (error) {
+        console.error('❌ Cleanup error:', error);
+      }
+    };
   }, []);
 
   // Monitor VR scene readiness
@@ -140,13 +179,32 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all' 
     }
   }, [aframeLoaded]);
 
+  // Handle keyboard escape to exit immersive mode
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && (isVRActive || isARActive || showQRModal)) {
+        console.log('⌨️  Escape key pressed - exiting immersive mode');
+        exitImmersive();
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [isVRActive, isARActive, showQRModal]);
+
   const enterVR = () => {
     if (!aframeLoaded) {
       alert('VR is still loading, please wait...');
       return;
     }
-    console.log('🚀 Entering VR mode with experience:', selectedExperience);
-    console.log('📸 Panorama URL:', experiences[selectedExperience as keyof typeof experiences].panoramaUrl);
+    const exp = experiences[selectedExperience as keyof typeof experiences];
+    console.log('🚀 Entering VR mode');
+    console.log('📍 Experience:', selectedExperience);
+    console.log('🏷️  Title:', exp.title);
+    console.log('📸 Panorama URL:', exp.panoramaUrl);
+    console.log('🎨 Category:', exp.category);
     setIsVRActive(true);
   };
 
@@ -156,22 +214,86 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all' 
       return;
     }
     
+    const exp = experiences[selectedExperience as keyof typeof experiences];
+    console.log('📱 Entering AR mode');
+    console.log('📍 Experience:', selectedExperience);
+    console.log('🏷️  Title:', exp.title);
+    console.log('🎨 Category:', exp.category);
+    
     // Check if on mobile device
     const isMobile = navigator.userAgent.match(/Mobile|Android|iPhone|iPad/);
     
     if (isMobile) {
-      // If already on mobile, launch AR directly
+      console.log('📱 Mobile device detected - launching AR directly');
       setIsARActive(true);
     } else {
-      // If on desktop, show QR code for mobile scanning
+      console.log('💻 Desktop detected - showing QR code');
       setShowQRModal(true);
     }
   };
 
   const exitImmersive = () => {
-    setIsVRActive(false);
-    setIsARActive(false);
-    setShowQRModal(false);
+    console.log('🚪 Exiting immersive mode');
+    
+    try {
+      // Clean up VR scene
+      if (isVRActive) {
+        const scene = document.querySelector('a-scene');
+        if (scene) {
+          // Exit VR mode if active
+          if (scene.is('vr-mode')) {
+            scene.exitVR();
+          }
+          console.log('✅ VR scene cleaned up');
+        }
+      }
+      
+      // Clean up AR
+      if (isARActive) {
+        const modelViewer = document.querySelector('model-viewer') as any;
+        if (modelViewer) {
+          // Stop any AR sessions
+          if (typeof modelViewer.dismissAR === 'function') {
+            modelViewer.dismissAR();
+          }
+          console.log('✅ AR session cleaned up');
+        }
+      }
+      
+      // Reset all states
+      setIsVRActive(false);
+      setIsARActive(false);
+      setShowQRModal(false);
+      setVrReady(false);
+      
+      // Clear URL parameters if they exist
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('mode')) {
+        url.searchParams.delete('mode');
+        url.searchParams.delete('experience');
+        window.history.replaceState({}, '', url.toString());
+      }
+      
+      console.log('✅ Successfully exited immersive mode');
+      
+      // Call onBack callback if provided
+      if (onBack) {
+        console.log('📍 Navigating back to previous page');
+        setTimeout(() => onBack(), 100); // Small delay to ensure cleanup completes
+      }
+    } catch (error) {
+      console.error('❌ Error during exit:', error);
+      // Force reset states even if cleanup fails
+      setIsVRActive(false);
+      setIsARActive(false);
+      setShowQRModal(false);
+      setVrReady(false);
+      
+      // Still call onBack if provided
+      if (onBack) {
+        setTimeout(() => onBack(), 100);
+      }
+    }
   };
 
   const currentExperience = experiences[selectedExperience as keyof typeof experiences];
@@ -373,13 +495,13 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all' 
 
       {/* A-Frame AR Scene */}
       {isARActive && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-br from-emerald-900/50 to-teal-900/50">
+        <div className="fixed inset-0 z-50 bg-black">
           {/* AR Instructions Banner */}
-          <div className="absolute top-0 left-0 right-0 bg-black/80 p-4 z-10">
+          <div className="absolute top-0 left-0 right-0 bg-black/90 p-4 z-10">
             <div className="flex items-center justify-between max-w-4xl mx-auto">
               <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">📱 AR Preview Mode</h3>
-                <p className="text-gray-300 text-sm">Move your device to explore the 3D model</p>
+                <h3 className="text-white font-semibold mb-1">📱 AR View</h3>
+                <p className="text-gray-300 text-sm">Tap and drag to rotate • Pinch to zoom</p>
               </div>
               <Button onClick={exitImmersive} variant="secondary" size="sm">
                 <X className="w-4 h-4 mr-2" />
@@ -388,59 +510,77 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all' 
             </div>
           </div>
           
-          {/* Simplified AR View with 3D Model */}
-          <div className="w-full h-full flex items-center justify-center pt-20 pb-10">
-            <div className="relative w-full max-w-md mx-auto px-4">
-              {/* 3D Model Preview Card */}
-              <Card className="bg-black/40 backdrop-blur-md border-2 border-primary/30">
-                <CardContent className="p-6">
-                  <div className="text-center text-white mb-4">
-                    <h3 className="text-xl font-bold mb-2">{currentExperience.title}</h3>
-                    <p className="text-sm text-gray-300">{currentExperience.description}</p>
-                  </div>
-                  
-                  {/* 3D Model Container */}
-                  <div className="relative aspect-square bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg overflow-hidden mb-4">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {/* Animated 3D representation */}
-                      <div className="relative w-48 h-48">
-                        <div className="absolute inset-0 animate-spin-slow">
-                          <div className="w-full h-full bg-gradient-to-br from-primary to-accent rounded-3xl transform rotate-45 opacity-80"></div>
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Camera className="w-24 h-24 text-white animate-pulse" />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* AR Markers */}
-                    <div className="absolute top-2 left-2 w-8 h-8 border-l-4 border-t-4 border-primary"></div>
-                    <div className="absolute top-2 right-2 w-8 h-8 border-r-4 border-t-4 border-primary"></div>
-                    <div className="absolute bottom-2 left-2 w-8 h-8 border-l-4 border-b-4 border-primary"></div>
-                    <div className="absolute bottom-2 right-2 w-8 h-8 border-r-4 border-b-4 border-primary"></div>
-                  </div>
-                  
-                  {/* AR Features */}
-                  <div className="space-y-2 text-sm text-gray-300">
-                    <div className="flex items-center gap-2">
+          {/* 3D Model Viewer with AR Support */}
+          <div className="w-full h-full pt-16">
+            <model-viewer
+              src={currentExperience.arModel}
+              alt={currentExperience.title}
+              ar
+              ar-modes="webxr scene-viewer quick-look"
+              camera-controls
+              touch-action="pan-y"
+              auto-rotate
+              shadow-intensity="1"
+              style={{
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)'
+              }}
+            >
+              {/* AR Button */}
+              <button
+                slot="ar-button"
+                style={{
+                  position: 'absolute',
+                  bottom: '20px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '24px',
+                  padding: '12px 32px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                📱 View in Your Space (AR)
+              </button>
+              
+              {/* Loading indicator */}
+              <div slot="poster" style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)'
+              }}>
+                <div style={{ textAlign: 'center', color: 'white' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔄</div>
+                  <div>Loading 3D Model...</div>
+                </div>
+              </div>
+            </model-viewer>
+            
+            {/* Info overlay */}
+            <div className="absolute bottom-24 left-0 right-0 px-4">
+              <Card className="bg-black/60 backdrop-blur-md border-primary/30 max-w-md mx-auto">
+                <CardContent className="p-4">
+                  <h4 className="text-white font-bold mb-1">{currentExperience.title}</h4>
+                  <p className="text-gray-300 text-sm mb-2">{currentExperience.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span>AR Camera Active</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span>3D Model Loaded</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                      <span>Gesture Controls Enabled</span>
-                    </div>
-                  </div>
-                  
-                  {/* Note about full AR */}
-                  <div className="mt-4 p-3 bg-accent/20 border border-accent/30 rounded-lg">
-                    <p className="text-xs text-gray-300 text-center">
-                      💡 For full AR experience with camera overlay, visit on a mobile device with AR support (iOS 12+ or Android 8+)
-                    </p>
+                      3D Model Ready
+                    </span>
+                    <span>•</span>
+                    <span>Tap button below for full AR</span>
                   </div>
                 </CardContent>
               </Card>

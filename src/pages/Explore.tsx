@@ -148,7 +148,13 @@ const Explore = () => {
           
           {/* AR/VR Component */}
           <div className="max-w-6xl mx-auto">
-            <ExploreARVRSimple category="all" />
+            <ExploreARVRSimple 
+              category="all" 
+              onBack={() => {
+                // Scroll back to the explore sections
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           </div>
         </div>
       </section>
