@@ -35,7 +35,6 @@ const ExploreDistricts = lazy(() => import('./pages/ExploreDistricts'));
 const Support = lazy(() => import('./pages/Support'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Favorites = lazy(() => import('./pages/Favorites'));
-const AIItineraryPlanner = lazy(() => import('./pages/AIItineraryPlanner'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const FeedbackAnalysis = lazy(() => import('./pages/FeedbackAnalysis'));
 const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
@@ -110,8 +109,6 @@ const App = () => {
                         <Route path="/transport" element={<Transport />} />
                         <Route path="/weather" element={<Weather />} />
                         <Route path="/chatbot" element={<Chatbot />} />
-                        <Route path="/ai-itinerary" element={<AIItineraryPlanner />} />
-                        <Route path="/ai-planner" element={<AIItineraryPlanner />} />
                         <Route path="/ai-trip-planner" element={<AITripPlannerPage />} />
                         <Route path="/smart-weather" element={<SmartWeatherPage />} />
                         <Route path="/predictive-booking" element={<PredictiveBookingPage />} />

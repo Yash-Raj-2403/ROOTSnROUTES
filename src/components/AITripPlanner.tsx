@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
+import { useToast } from './ui/use-toast';
 import { Calendar, Clock, MapPin, Users, Sparkles, Download, Share, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import Groq from 'groq-sdk';
@@ -30,22 +31,39 @@ interface ItineraryDay {
     activity: string;
     location: string;
     description: string;
+    duration?: string;
     cost: string;
     type: string;
+    travelToNext?: {
+      mode: string;
+      duration: string;
+      distance: string;
+      route: string;
+      cost: string;
+    };
   }>;
   meals: Array<{
     time: string;
+    type?: string;
     restaurant: string;
     cuisine: string;
+    specialties?: string[];
     cost: string;
   }>;
   accommodation: {
     name: string;
     type: string;
     location: string;
+    checkIn?: string;
+    checkOut?: string;
+    amenities?: string[];
     cost: string;
   };
   totalDayCost: string;
+  dayStartLocation?: string;
+  dayEndLocation?: string;
+  totalTravelTime?: string;
+  totalDistance?: string;
 }
 
 interface GeneratedItinerary {
@@ -60,6 +78,7 @@ interface GeneratedItinerary {
 
 const AITripPlanner = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [preferences, setPreferences] = useState<TripPreferences>({
     duration: '',
     budget: '',
@@ -220,14 +239,28 @@ const AITripPlanner = () => {
     }
     
     try {
+      // Check if API key is configured
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      
+      if (!apiKey || apiKey === 'your_groq_api_key_here' || apiKey.trim() === '') {
+        toast({
+          title: "Configuration Required",
+          description: "Groq API key is not configured. Please add VITE_GROQ_API_KEY to your .env file. Visit https://console.groq.com/ to get your free API key.",
+          variant: "destructive",
+          duration: 8000
+        });
+        setIsGenerating(false);
+        return;
+      }
+      
       // Initialize Groq client
       const groq = new Groq({
-        apiKey: import.meta.env.VITE_GROQ_API_KEY,
+        apiKey: apiKey,
         dangerouslyAllowBrowser: true
       });
 
       // Create detailed prompt for AI
-      const prompt = `You are an expert travel planner specializing in Jharkhand tourism. Create a detailed, personalized ${preferences.duration}-day itinerary based on the following preferences:
+      const prompt = `You are an expert travel planner specializing in Jharkhand tourism. Create a detailed, realistic ${preferences.duration}-day itinerary with proper time management and travel directions.
 
 **Trip Details:**
 - Duration: ${preferences.duration} days
@@ -239,73 +272,129 @@ const AITripPlanner = () => {
 - Interests: ${preferences.interests.join(', ') || 'General sightseeing'}
 - Special Requests: ${preferences.specialRequests || 'None'}
 
-**Requirements:**
-1. Provide a catchy title for the trip
-2. Write an engaging description (2-3 sentences)
-3. Calculate realistic total trip cost in INR
-4. Create day-by-day itinerary with specific timings, locations, and activities
-5. Include meal recommendations with restaurant names and cuisine types
-6. Suggest appropriate accommodations for each night
-7. Provide practical recommendations, weather tips, and cultural tips specific to Jharkhand
+**CRITICAL REQUIREMENTS:**
+1. Plan activities in SEQUENTIAL ORDER with realistic timing
+2. For each activity, include:
+   - Exact time (e.g., "08:30 AM")
+   - Duration of activity
+   - Travel time to next location
+   - Best route/transportation mode (e.g., "20 min drive via NH33", "45 min local bus")
+3. Account for:
+   - Morning: Start around 7-8 AM (after breakfast)
+   - Lunch break: 12:30-2:00 PM
+   - Evening: Activities until 6-7 PM
+   - Travel time between locations (be realistic!)
+4. Include specific directions like:
+   - "From Ranchi, take NH33 towards Hundru Falls (45km, 1 hour drive)"
+   - "Local auto-rickshaw from hotel (15 min, ₹50)"
+5. Real places in Jharkhand: Hundru Falls, Dassam Falls, Tagore Hill, Betla National Park, Netarhat, etc.
+6. Calculate costs realistically (entry fees, transport, meals)
 
-**Format your response as a valid JSON object with this exact structure:**
+**Format your response as valid JSON:**
 {
-  "title": "Trip title",
-  "description": "Trip description",
+  "title": "Captivating trip title",
+  "description": "Engaging 2-3 sentence description",
   "totalCost": "₹XX,XXX",
   "days": [
     {
       "day": 1,
-      "title": "Day title",
+      "title": "Day title with main focus",
       "activities": [
         {
-          "time": "09:00 AM",
+          "time": "08:30 AM",
           "activity": "Activity name",
-          "location": "Specific location",
-          "description": "Detailed description",
+          "location": "Specific location with district",
+          "description": "What you'll experience",
+          "duration": "2 hours",
           "cost": "₹XXX",
-          "type": "Cultural/Nature/Adventure/etc"
+          "type": "Cultural/Nature/Adventure",
+          "travelToNext": {
+            "mode": "Car/Bus/Auto",
+            "duration": "45 minutes",
+            "distance": "25 km",
+            "route": "Take NH33 towards...",
+            "cost": "₹XXX"
+          }
         }
       ],
       "meals": [
         {
-          "time": "12:00 PM",
+          "time": "08:00 AM",
+          "type": "Breakfast",
+          "restaurant": "Hotel/Restaurant name",
+          "cuisine": "Local Jharkhandi/North Indian",
+          "specialties": ["Dish 1", "Dish 2"],
+          "cost": "₹XXX"
+        },
+        {
+          "time": "01:00 PM",
+          "type": "Lunch",
           "restaurant": "Restaurant name",
           "cuisine": "Cuisine type",
+          "specialties": ["Dish 1", "Dish 2"],
+          "cost": "₹XXX"
+        },
+        {
+          "time": "08:00 PM",
+          "type": "Dinner",
+          "restaurant": "Restaurant name",
+          "cuisine": "Cuisine type",
+          "specialties": ["Dish 1", "Dish 2"],
           "cost": "₹XXX"
         }
       ],
       "accommodation": {
-        "name": "Hotel/Lodge name",
-        "type": "Hotel type",
-        "location": "Location",
-        "cost": "₹X,XXX"
+        "name": "Realistic hotel name",
+        "type": "Budget/Mid-range/Luxury",
+        "location": "Area, District",
+        "checkIn": "03:00 PM",
+        "checkOut": "11:00 AM",
+        "amenities": ["WiFi", "Parking", "Restaurant"],
+        "cost": "₹X,XXX per night"
       },
-      "totalDayCost": "₹X,XXX"
+      "totalDayCost": "₹X,XXX",
+      "dayStartLocation": "Starting point",
+      "dayEndLocation": "Ending point",
+      "totalTravelTime": "X hours",
+      "totalDistance": "XX km"
     }
   ],
-  "recommendations": ["tip1", "tip2", ...],
-  "weatherTips": ["tip1", "tip2", ...],
-  "culturalTips": ["tip1", "tip2", ...]
+  "recommendations": [
+    "Book specific hotels/activities in advance",
+    "Best time to visit each location",
+    "What to carry (weather-specific)",
+    "Safety tips for the region"
+  ],
+  "weatherTips": [
+    "Current season weather details",
+    "What to pack",
+    "Best time for outdoor activities"
+  ],
+  "culturalTips": [
+    "Tribal etiquette and customs",
+    "Local festivals during visit",
+    "Photography permissions",
+    "Language tips (local greetings)"
+  ]
 }
 
-Make it specific to Jharkhand with real places, tribal culture, waterfalls, wildlife sanctuaries, and local experiences. Be creative and detailed!`;
+BE REALISTIC: Use actual places, real travel times, proper costs, and sequential timing!`;
 
-      // Call Groq API
+      // Call Groq API with active model
       const chatCompletion = await groq.chat.completions.create({
         messages: [
           {
             role: 'system',
-            content: 'You are an expert Jharkhand travel planner. Always respond with valid JSON format only, no additional text or markdown.'
+            content: 'You are an expert Jharkhand travel planner with deep knowledge of routes, timings, and logistics. Create realistic, sequential itineraries with proper time management and travel directions. Always respond with valid JSON format only.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        model: 'llama-3.1-8b-instant',
-        temperature: 0.7,
-        max_tokens: 4000,
+        model: 'llama-3.3-70b-versatile', // Updated to active model
+        temperature: 0.8,
+        max_tokens: 8000,
         response_format: { type: 'json_object' }
       });
 
@@ -323,37 +412,28 @@ Make it specific to Jharkhand with real places, tribal culture, waterfalls, wild
     } catch (error) {
       console.error('Error generating itinerary:', error);
       
-      // Fallback to mock itinerary if API fails
-      const mockItinerary: GeneratedItinerary = {
-        title: preferences.targetAreas.length > 1 
-          ? `${preferences.duration}-Day ${preferences.targetAreas.join(' & ')} Circuit`
-          : `${preferences.duration}-Day ${preferences.targetAreas[0] || 'Jharkhand'} Experience`,
-        description: `A personalized journey through ${preferences.targetAreas.length > 1 ? 'multiple regions' : preferences.targetAreas[0] || 'Jharkhand'}, featuring ${preferences.interests.slice(0, 3).join(', ')} experiences.`,
-        totalCost: preferences.budget === 'budget' ? '₹8,500' : preferences.budget === 'mid-range' ? '₹15,000' : '₹25,000',
-        days: generateAreaBasedDays(),
-        recommendations: [
-          'Book accommodations in advance during festival seasons',
-          'Carry cash for local purchases and small vendors',
-          'Learn basic Hindi/tribal greetings for better interactions',
-          'Respect local customs and traditions'
-        ],
-        weatherTips: [
-          'Current weather is perfect for outdoor activities',
-          'Carry light rain gear as afternoon showers are common',
-          'Morning temperatures are ideal for travel'
-        ],
-        culturalTips: [
-          'Each region has unique tribal customs - be respectful',
-          'Try regional specialties - distinct cuisine in each area',
-          'Respect photography permissions in tribal areas'
-        ]
-      };
-
-      // Cache fallback too
-      itineraryCache.set(cacheKey, mockItinerary);
+      // Show proper error message instead of mock data
+      let errorMessage = 'Failed to generate itinerary. ';
       
-      setGeneratedItinerary(mockItinerary);
-      setStep(3);
+      if (error instanceof Error) {
+        if (error.message.includes('API key') || error.message.includes('apiKey')) {
+          errorMessage += 'Groq API key is not configured. Please add VITE_GROQ_API_KEY to your .env file.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage += 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage += error.message;
+        }
+      }
+      
+      toast({
+        title: "AI Generation Failed",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 6000
+      });
+      
+      setIsGenerating(false);
+      // Don't proceed to step 3, stay on step 2 so user can try again
     } finally {
       setIsGenerating(false);
     }
@@ -870,13 +950,36 @@ Make it specific to Jharkhand with real places, tribal culture, waterfalls, wild
                         {day.activities.map((activity, idx) => (
                           <div key={idx} className="bg-muted p-3 rounded-md">
                             <div className="flex justify-between items-start mb-2">
-                              <p className="font-medium text-primary">{activity.time}</p>
+                              <div>
+                                <p className="font-medium text-primary">{activity.time}</p>
+                                {activity.duration && (
+                                  <p className="text-xs text-muted-foreground">Duration: {activity.duration}</p>
+                                )}
+                              </div>
                               <Badge variant="outline">{activity.type}</Badge>
                             </div>
                             <p className="font-semibold">{activity.activity}</p>
-                            <p className="text-sm text-muted-foreground">{activity.location}</p>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {activity.location}
+                            </p>
                             <p className="text-sm mt-1">{activity.description}</p>
                             <p className="text-sm font-medium mt-2">Cost: {activity.cost}</p>
+                            
+                            {/* Travel Info to Next Location */}
+                            {activity.travelToNext && (
+                              <div className="mt-3 pt-3 border-t border-border">
+                                <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                  🚗 Travel to Next Stop
+                                </p>
+                                <div className="bg-background/50 p-2 rounded text-xs space-y-1">
+                                  <p><strong>Mode:</strong> {activity.travelToNext.mode}</p>
+                                  <p><strong>Time:</strong> {activity.travelToNext.duration} • <strong>Distance:</strong> {activity.travelToNext.distance}</p>
+                                  <p className="text-muted-foreground italic">{activity.travelToNext.route}</p>
+                                  <p><strong>Cost:</strong> {activity.travelToNext.cost}</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -891,11 +994,22 @@ Make it specific to Jharkhand with real places, tribal culture, waterfalls, wild
                         {day.meals.map((meal, idx) => (
                           <div key={idx} className="bg-muted p-3 rounded-md">
                             <div className="flex justify-between items-center mb-1">
-                              <p className="font-medium text-primary">{meal.time}</p>
+                              <div>
+                                <p className="font-medium text-primary">{meal.time}</p>
+                                {meal.type && (
+                                  <p className="text-xs text-muted-foreground">{meal.type}</p>
+                                )}
+                              </div>
                               <p className="text-sm font-medium">{meal.cost}</p>
                             </div>
                             <p className="font-semibold">{meal.restaurant}</p>
                             <p className="text-sm text-muted-foreground">{meal.cuisine}</p>
+                            {meal.specialties && meal.specialties.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs font-semibold text-muted-foreground">Try:</p>
+                                <p className="text-xs">{meal.specialties.join(', ')}</p>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -910,11 +1024,41 @@ Make it specific to Jharkhand with real places, tribal culture, waterfalls, wild
                         <p className="font-semibold">{day.accommodation.name}</p>
                         <p className="text-sm text-muted-foreground mb-2">{day.accommodation.type}</p>
                         <p className="text-sm mb-2">{day.accommodation.location}</p>
+                        {day.accommodation.checkIn && day.accommodation.checkOut && (
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Check-in: {day.accommodation.checkIn} • Check-out: {day.accommodation.checkOut}
+                          </p>
+                        )}
+                        {day.accommodation.amenities && day.accommodation.amenities.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {day.accommodation.amenities.map((amenity, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs">{amenity}</Badge>
+                            ))}
+                          </div>
+                        )}
                         <p className="text-sm font-medium">Cost: {day.accommodation.cost}</p>
                       </div>
                       
-                      <div className="mt-4 p-3 bg-primary/10 rounded-md">
-                        <p className="font-semibold text-primary">Day Total: {day.totalDayCost}</p>
+                      {/* Day Summary */}
+                      <div className="mt-4 space-y-2">
+                        {(day.dayStartLocation || day.dayEndLocation) && (
+                          <div className="p-3 bg-background rounded-md text-sm">
+                            {day.dayStartLocation && (
+                              <p><strong>Start:</strong> {day.dayStartLocation}</p>
+                            )}
+                            {day.dayEndLocation && (
+                              <p><strong>End:</strong> {day.dayEndLocation}</p>
+                            )}
+                            {day.totalTravelTime && (
+                              <p className="text-muted-foreground">
+                                Travel: {day.totalTravelTime} • {day.totalDistance}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        <div className="p-3 bg-primary/10 rounded-md">
+                          <p className="font-semibold text-primary">Day Total: {day.totalDayCost}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
