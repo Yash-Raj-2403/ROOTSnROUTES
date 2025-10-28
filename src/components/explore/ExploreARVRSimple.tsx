@@ -59,23 +59,23 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
       title: '🏔️ Betla National Park',
       description: 'Experience the wildlife sanctuary in immersive VR with 360° forest views',
       panoramaUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=4096&h=2048&fit=crop&q=90',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
-      arModel: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF-Binary/BrainStem.glb',
+      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb',
       category: 'Nature & Wildlife'
     },
     marketplace: {
       title: '🎨 Dokra Art Gallery',
       description: 'Explore traditional brass artifacts in 3D with virtual marketplace tour',
       panoramaUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=4096&h=2048&fit=crop&q=90',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
-      arModel: 'https://modelviewer.dev/shared-assets/models/Horse.glb',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Lantern/glTF-Binary/Lantern.glb',
+      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
       category: 'Art & Crafts'
     },
     restaurant: {
       title: '🍽️ Traditional Kitchen',
       description: 'Virtual tour of authentic Jharkhandi cuisine and dining experience',
       panoramaUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=4096&h=2048&fit=crop&q=90',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb',
       arModel: 'https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb',
       category: 'Food & Dining'
     },
@@ -83,8 +83,8 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
       title: '🏨 Heritage Stay',
       description: 'Preview luxury accommodations in VR with 360° room tours',
       panoramaUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=4096&h=2048&fit=crop&q=90',
-      modelUrl: 'https://cdn.aframe.io/examples/ar/models/magnemite/scene.gltf',
-      arModel: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Chair/glTF-Binary/Chair.glb',
+      arModel: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
       category: 'Accommodation'
     }
   };
@@ -451,6 +451,14 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
                 align="center"
                 geometry="primitive: plane; width: 6; height: 1"
                 material="color: rgba(0,0,0,0.7); opacity: 0.8"
+              />
+              
+              {/* Display the 3D Model */}
+              <a-entity
+                gltf-model="#model"
+                position="0 1 -5"
+                scale="0.5 0.5 0.5"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
               />
               
               {/* Animated 3D Objects */}
