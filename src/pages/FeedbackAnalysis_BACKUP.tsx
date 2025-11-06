@@ -543,7 +543,7 @@ Be specific, actionable, and focus on Jharkhand tourism context. Return ONLY val
           </div>
 
           {/* AI Analysis Tool (Optional Advanced Feature) */}
-          <Card className="shadow-lg mb-12">
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-teal-600" />
@@ -584,111 +584,114 @@ Be specific, actionable, and focus on Jharkhand tourism context. Return ONLY val
 
           {/* AI Analysis Results */}
           {analysis && (
-            <div className="mb-12">
+            <div className="mt-8">
               <h2 className="text-2xl font-bold text-foreground mb-6">AI Analysis Results</h2>
               <div className="grid lg:grid-cols-2 gap-6">
                 {/* Sentiment Card */}
-                <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      {getSentimentIcon(analysis.sentiment)}
-                      Sentiment Analysis
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Badge className={getSentimentColor(analysis.sentiment)} variant="secondary">
-                        {analysis.sentiment.toUpperCase()}
-                      </Badge>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-foreground">{analysis.score}%</div>
-                        <div className="text-sm text-muted-foreground">Satisfaction Score</div>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                      <div
-                        className={`h-3 rounded-full transition-all ${
-                          analysis.score >= 70 ? 'bg-emerald-600' :
-                          analysis.score >= 40 ? 'bg-amber-600' : 'bg-red-600'
-                        }`}
-                        style={{ width: `${analysis.score}%` }}
-                      />
-                    </div>
-
-                    <p className="text-sm text-muted-foreground">
-                      {analysis.summary}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Categories */}
-                <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-amber-600" />
-                      Feedback Categories
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.categories.map((category, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700"
-                        >
-                          {category}
+                <>
+                  {/* Sentiment Card */}
+                  <Card className="shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        {getSentimentIcon(analysis.sentiment)}
+                        Sentiment Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Badge className={getSentimentColor(analysis.sentiment)} variant="secondary">
+                          {analysis.sentiment.toUpperCase()}
                         </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold text-foreground">{analysis.score}%</div>
+                          <div className="text-sm text-muted-foreground">Satisfaction Score</div>
+                        </div>
+                      </div>
+                      
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                        <div
+                          className={`h-3 rounded-full transition-all ${
+                            analysis.score >= 70 ? 'bg-emerald-600' :
+                            analysis.score >= 40 ? 'bg-amber-600' : 'bg-red-600'
+                          }`}
+                          style={{ width: `${analysis.score}%` }}
+                        />
+                      </div>
 
-                {/* Key Points */}
-                <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                      Key Points
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {analysis.keyPoints.map((point, index) => (
-                        <li key={index} className="flex gap-3">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-semibold">
-                            {index + 1}
-                          </span>
-                          <span className="text-sm text-foreground">{point}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+                      <p className="text-sm text-muted-foreground">
+                        {analysis.summary}
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                {/* Suggestions */}
-                <Card className="shadow-lg border-teal-200 dark:border-teal-800">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-teal-600" />
-                      Actionable Suggestions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {analysis.suggestions.map((suggestion, index) => (
-                        <li key={index} className="flex gap-3">
-                          <span className="flex-shrink-0 mt-1">
-                            <TrendingUp className="w-5 h-5 text-teal-600" />
-                          </span>
-                          <span className="text-sm text-foreground">{suggestion}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
+                  {/* Categories */}
+                  <Card className="shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-amber-600" />
+                        Feedback Categories
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {analysis.categories.map((category, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700"
+                          >
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Key Points */}
+                  <Card className="shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                        Key Points
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {analysis.keyPoints.map((point, index) => (
+                          <li key={index} className="flex gap-3">
+                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-semibold">
+                              {index + 1}
+                            </span>
+                            <span className="text-sm text-foreground">{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  {/* Suggestions */}
+                  <Card className="shadow-lg border-teal-200 dark:border-teal-800">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-teal-600" />
+                        Actionable Suggestions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {analysis.suggestions.map((suggestion, index) => (
+                          <li key={index} className="flex gap-3">
+                            <span className="flex-shrink-0 mt-1">
+                              <TrendingUp className="w-5 h-5 text-teal-600" />
+                            </span>
+                            <span className="text-sm text-foreground">{suggestion}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
           )}
         </div>
