@@ -93,28 +93,49 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
   useEffect(() => {
     const loadLibraries = async () => {
       try {
-        if (typeof window !== 'undefined' && !window.AFRAME) {
-          // Load A-Frame core
-          await import('aframe');
-          console.log('✅ A-Frame loaded successfully');
-        } else if (window.AFRAME) {
-          console.log('✅ A-Frame already loaded');
+        // Check if A-Frame is already loaded (from CDN or package)
+        if (typeof window !== 'undefined') {
+          if (!window.AFRAME) {
+            console.log('🔄 A-Frame not found, loading from CDN...');
+            
+            // Load A-Frame from CDN as fallback
+            const aframeScript = document.createElement('script');
+            aframeScript.src = 'https://aframe.io/releases/1.6.0/aframe.min.js';
+            aframeScript.async = false;
+            
+            aframeScript.onload = () => {
+              console.log('✅ A-Frame loaded from CDN successfully');
+              setAframeLoaded(true);
+            };
+            
+            aframeScript.onerror = async () => {
+              console.warn('⚠️ CDN failed, trying package import...');
+              try {
+                await import('aframe');
+                console.log('✅ A-Frame loaded from package');
+                setAframeLoaded(true);
+              } catch (error) {
+                console.error('❌ Failed to load A-Frame:', error);
+                setAframeLoaded(true); // Still show interface
+              }
+            };
+            
+            document.head.appendChild(aframeScript);
+          } else {
+            console.log('✅ A-Frame already loaded');
+            setAframeLoaded(true);
+          }
+          
+          // Model Viewer is already in index.html, just verify
+          if (!customElements.get('model-viewer')) {
+            console.log('✅ Model Viewer will load from index.html');
+          } else {
+            console.log('✅ Model Viewer already available');
+          }
         }
-        
-        // Load model-viewer for AR
-        if (!customElements.get('model-viewer')) {
-          const modelViewerScript = document.createElement('script');
-          modelViewerScript.type = 'module';
-          modelViewerScript.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js';
-          document.head.appendChild(modelViewerScript);
-          console.log('✅ Model Viewer script added');
-        }
-        
-        setAframeLoaded(true);
       } catch (error) {
         console.error('❌ Failed to load libraries:', error);
-        // Still set as loaded to show the interface
-        setAframeLoaded(true);
+        setAframeLoaded(true); // Still show interface
       }
     };
 
