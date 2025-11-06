@@ -42,7 +42,11 @@ const Hero = memo(() => {
             
             {/* Tagline */}
             <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <p className="text-emerald-300/80 text-base md:text-lg font-medium tracking-wide uppercase">
+              <p className="text-base md:text-lg font-bold tracking-wide uppercase text-white" style={{
+                textShadow: '2px 2px 8px rgba(0, 0, 0, 0.9), 0px 0px 20px rgba(0, 0, 0, 0.8)',
+                filter: 'drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.7))',
+                letterSpacing: '0.05em'
+              }}>
                 {t('hero.tagline')}
               </p>
             </div>

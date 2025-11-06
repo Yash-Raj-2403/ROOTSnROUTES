@@ -1,10 +1,27 @@
 import Groq from "groq-sdk";
 import { allDestinations, Destination } from "@/data/completeDestinations.ts";
 
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true
-});
+// Initialize Groq with better error handling
+const getGroqClient = () => {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  
+  if (!apiKey || apiKey === 'your_groq_api_key_here') {
+    console.warn('⚠️ Groq API key not configured. AI features will use fallback mode.');
+    return null;
+  }
+  
+  try {
+    return new Groq({
+      apiKey: apiKey,
+      dangerouslyAllowBrowser: true
+    });
+  } catch (error) {
+    console.error('Failed to initialize Groq client:', error);
+    return null;
+  }
+};
+
+const groq = getGroqClient();
 
 export interface UserPreferences {
   interests: string[];
@@ -157,6 +174,12 @@ class AIItineraryService {
     6. Include emergency contact information in tips`;
 
     try {
+      // Check if Groq client is available
+      if (!groq) {
+        console.warn('🔄 Groq API not available, using fallback itinerary generator');
+        return this.generateFallbackItinerary(destinations, preferences);
+      }
+
       const completion = await groq.chat.completions.create({
         messages: [
           {
@@ -209,10 +232,20 @@ class AIItineraryService {
         bestRouteMap: aiItinerary.bestRouteMap || "Route information will be provided in the detailed view",
         weatherConsiderations: aiItinerary.weatherConsiderations || "Check weather conditions before traveling"
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI Itinerary Generation Error:', error);
       
+      // Provide specific error messages
+      if (error?.status === 401) {
+        console.error('❌ Invalid Groq API key. Please check your .env file.');
+      } else if (error?.status === 429) {
+        console.error('⏱️ Groq API rate limit exceeded. Using fallback.');
+      } else if (error?.message?.includes('fetch')) {
+        console.error('🌐 Network error. Check your internet connection.');
+      }
+      
       // Fallback to rule-based itinerary
+      console.log('🔄 Generating itinerary using fallback method...');
       return this.generateFallbackItinerary(destinations, preferences);
     }
   }

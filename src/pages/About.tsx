@@ -115,7 +115,7 @@ const About = () => {
     {
       name: "Tanish Oberoi",
       role: "Project Manager & System Integration Lead",
-      description: "Strategic project manager ensuring seamless execution and system integration. Manages development workflows, coordinates cross-functional teams, and ensures alignment with Smart India Hackathon objectives while maintaining project timelines and quality standards.",
+      description: "Strategic project manager ensuring seamless execution and system integration. Manages development workflows, coordinates cross-functional teams, and ensures alignment with sustainable tourism objectives while maintaining project timelines and quality standards.",
       image: ""
     },
     {
@@ -455,7 +455,7 @@ const About = () => {
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">About ROOTSnROUTES</h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                A Smart India Hackathon 2025 project revolutionizing Jharkhand's tourism ecosystem through innovative technology
+                A comprehensive digital platform revolutionizing Jharkhand's tourism ecosystem through innovative technology and authentic cultural experiences
               </p>
             </div>
 
@@ -465,18 +465,20 @@ const About = () => {
                 <div className="space-y-4 text-muted-foreground text-lg leading-relaxed">
                   <p>
                     ROOTSnROUTES represents a paradigm shift in how travelers discover and experience Jharkhand's hidden treasures. 
-                    Developed as part of Smart India Hackathon 2025, our platform addresses the critical challenge of promoting 
-                    sustainable tourism while empowering local communities.
+                    Our platform addresses the critical challenge of promoting sustainable tourism while empowering local communities 
+                    through technology-driven solutions and authentic cultural connections.
                   </p>
                   <p>
                     By leveraging cutting-edge AI technology, blockchain security, and comprehensive multilingual support, 
                     we're creating an inclusive digital ecosystem that connects travelers with authentic local experiences 
-                    across all 24 districts of Jharkhand.
+                    across all 24 districts of Jharkhand. Our mission is to preserve cultural heritage while promoting economic 
+                    growth in rural and tribal areas.
                   </p>
                   <p>
                     Our platform goes beyond traditional tourism by integrating real-time weather monitoring, emergency services, 
                     local marketplace access, and AI-powered itinerary planning to ensure safe, meaningful, and culturally 
-                    respectful travel experiences.
+                    respectful travel experiences. We bridge the gap between travelers and local communities, creating mutual 
+                    benefits and lasting connections.
                   </p>
                 </div>
               </div>
@@ -540,14 +542,15 @@ const About = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Meet Our Team</h2>
             <p className="text-xl text-muted-foreground max-w-4xl mx-auto mb-8">
-              A passionate team of innovators, developers, and designers who came together for Smart India Hackathon 2025 
-              to revolutionize Jharkhand's tourism ecosystem. Each member brings unique expertise to create a comprehensive 
-              platform that bridges technology with authentic cultural experiences.
+              A passionate team of innovators, developers, and designers dedicated to revolutionizing Jharkhand's tourism ecosystem. 
+              Each member brings unique expertise to create a comprehensive platform that bridges technology with authentic cultural 
+              experiences, empowering local communities and preserving cultural heritage.
             </p>
-            <div className="bg-card/30 rounded-lg p-4 max-w-2xl mx-auto">
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">Smart India Hackathon 2025</strong> - Team ROOTSnROUTES<br/>
-                Problem Statement: Development of a Smart Digital Platform to Promote Eco & Cultural Tourism in Jharkhand
+            <div className="bg-gradient-to-r from-emerald-500/10 to-green-500/10 rounded-lg p-6 max-w-2xl mx-auto border border-emerald-200/20">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                <strong className="text-emerald-600 dark:text-emerald-400 text-lg">Team ROOTSnROUTES</strong><br/>
+                <span className="text-foreground font-medium">Mission:</span> Building a Smart Digital Platform to Promote Sustainable Eco & Cultural Tourism in Jharkhand<br/>
+                <span className="text-muted-foreground italic">Connecting travelers with authentic experiences while empowering local communities</span>
               </p>
             </div>
           </div>
