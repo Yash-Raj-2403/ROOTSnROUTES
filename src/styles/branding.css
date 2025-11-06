@@ -5,14 +5,14 @@
 
 :root {
     /* Primary Brand Colors */
-    --brand-primary: hsl(210, 70%, 55%);
-    --brand-secondary: hsl(280, 60%, 60%);
+    --brand-primary: hsl(160, 84%, 39%);
+    --brand-secondary: hsl(142, 76%, 36%);
     --brand-accent: hsl(30, 85%, 65%);
     /* Jharkhand Inspired Colors */
     --jharkhand-forest: hsl(150, 40%, 35%);
     --jharkhand-earth: hsl(25, 45%, 45%);
     --jharkhand-sunset: hsl(15, 75%, 55%);
-    --jharkhand-tribal: hsl(285, 50%, 50%);
+    --jharkhand-tribal: hsl(160, 70%, 45%);
     /* Brand Gradients */
     --gradient-brand: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
     --gradient-jharkhand: linear-gradient(135deg, var(--jharkhand-forest), var(--jharkhand-earth));

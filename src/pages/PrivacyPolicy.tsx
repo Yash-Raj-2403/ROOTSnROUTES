@@ -77,7 +77,7 @@ const PrivacyPolicy = () => {
                 If you have any questions about this Privacy Policy, please contact us at:
               </p>
               <ul className="list-disc list-inside ml-4 space-y-2">
-                <li>Email: privacy@rootsnroutes.com</li>
+                <li>Email: rootsnroutesofficial@gmail.com</li>
                 <li>Phone: +91 9876543210</li>
                 <li>Address: Ranchi, Jharkhand, India</li>
               </ul>

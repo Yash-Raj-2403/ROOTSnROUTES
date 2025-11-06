@@ -8,6 +8,7 @@ const PWAInstallPrompt: React.FC = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [shake, setShake] = useState(false);
 
   useEffect(() => {
     // Check if can show install prompt
@@ -17,10 +18,15 @@ const PWAInstallPrompt: React.FC = () => {
       const installedBefore = localStorage.getItem('pwa-installed');
 
       if (installable && !dismissed && !installedBefore) {
-        // Show prompt after 30 seconds
+        // Show prompt after 5 seconds for better UX
         setTimeout(() => {
           setShowPrompt(true);
-        }, 30000);
+          // Add shake animation 2 seconds after showing to grab attention
+          setTimeout(() => {
+            setShake(true);
+            setTimeout(() => setShake(false), 500);
+          }, 2000);
+        }, 5000);
       }
     };
 
@@ -102,12 +108,12 @@ const PWAInstallPrompt: React.FC = () => {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 max-w-sm animate-in slide-in-from-bottom-5">
-      <Card className="bg-gradient-to-br from-primary to-accent text-white shadow-2xl border-0">
-        <CardContent className="p-6">
+    <div className={`fixed bottom-6 right-6 z-50 max-w-sm w-full sm:w-96 animate-in slide-in-from-bottom-5 ${shake ? 'animate-shake' : ''}`}>
+      <Card className="bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-2xl border-0 animate-pulse-subtle">
+        <CardContent className="p-5">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <span className="text-2xl">🌄</span>
               </div>
               <div>
@@ -119,13 +125,14 @@ const PWAInstallPrompt: React.FC = () => {
               variant="ghost"
               size="icon"
               onClick={handleDismiss}
-              className="text-white hover:bg-white/20 -mt-2 -mr-2"
+              className="text-white hover:bg-white/20 -mt-2 -mr-2 flex-shrink-0"
+              aria-label="Dismiss install prompt"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </Button>
           </div>
 
-          <div className="space-y-2 mb-4 text-sm text-white/90">
+          <div className="space-y-2 mb-4 text-sm text-white/95">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
               <span>Works offline</span>
@@ -143,11 +150,11 @@ const PWAInstallPrompt: React.FC = () => {
           <Button
             onClick={handleInstall}
             disabled={isInstalling}
-            className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
+            className="w-full bg-white text-emerald-600 hover:bg-white/90 font-semibold shadow-lg"
           >
             {isInstalling ? (
               <>
-                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2"></div>
+                <div className="w-4 h-4 border-2 border-emerald-600/30 border-t-emerald-600 rounded-full animate-spin mr-2"></div>
                 Installing...
               </>
             ) : (

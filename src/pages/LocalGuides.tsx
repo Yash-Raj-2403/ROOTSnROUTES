@@ -621,7 +621,7 @@ const LocalGuides = () => {
       </section>
 
       {/* Information Section */}
-      <section className="py-16 bg-forest-50 dark:bg-forest-950/50">
+      <section className="py-16 bg-forest-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -735,11 +735,11 @@ const LocalGuides = () => {
                       <div className="space-y-1 text-sm">
                         <div className="flex items-center">
                           <Phone className="w-3 h-3 mr-2" />
-                          <span>+91 7004567890 (ROOTSnROUTES Support)</span>
+                          <span>+91 987654321 (ROOTSnROUTES Support)</span>
                         </div>
                         <div className="flex items-center">
                           <Mail className="w-3 h-3 mr-2" />
-                          <span>guides@rootsnroutes.com</span>
+                          <span>rootsnroutesofficial@gmail.com</span>
                         </div>
                       </div>
                     </div>

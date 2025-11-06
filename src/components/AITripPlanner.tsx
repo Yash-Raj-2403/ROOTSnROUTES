@@ -1414,12 +1414,12 @@ Return response in this EXACT JSON format:
             )}
 
             {preferences.targetAreas.length === 0 && (
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2 mb-2">
+              <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 mb-2">
                   <Sparkles className="h-5 w-5" />
                   <span>AI Smart Selection Mode Activated 🤖</span>
                 </p>
-                <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-2">
                   Our AI will intelligently select the best regions for you based on:
                 </p>
                 <ul className="text-sm text-blue-600 dark:text-blue-400 space-y-1 ml-4">
@@ -1665,7 +1665,7 @@ Return response in this EXACT JSON format:
                         <Button
                           variant="default"
                           size="sm"
-                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                          className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
                           onClick={() => handleBookAccommodation(day.accommodation.name, day.accommodation.location, day.accommodation.type)}
                         >
                           <Hotel className="h-3 w-3 mr-1" />
@@ -1803,7 +1803,7 @@ Return response in this EXACT JSON format:
                   </p>
                 </div>
                 <div className="text-center p-4 bg-white dark:bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <ExternalLink className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                  <ExternalLink className="h-8 w-8 mx-auto mb-2 text-emerald-600" />
                   <p className="font-semibold text-sm">Transport</p>
                   <p className="text-xs text-muted-foreground">All Routes</p>
                 </div>

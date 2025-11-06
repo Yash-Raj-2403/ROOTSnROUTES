@@ -190,7 +190,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div className="text-center space-y-2">
                 <CardTitle 
                   id="login-title"
-                  className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                  className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent"
                 >
                   {isLogin ? "Welcome Back!" : "Join ROOTSnROUTES"}
                 </CardTitle>
@@ -237,7 +237,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   <div className="space-y-1">
                     <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                     <Input
                       id="name"
                       ref={firstInputRef}
@@ -260,7 +260,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 <div className="space-y-1">
                   <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                     <Input
                       id="phone"
                       type="tel"
@@ -309,7 +309,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div className="space-y-1">
                 <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                   <Input
                     id="email"
                     ref={isLogin ? firstInputRef : undefined}
@@ -331,7 +331,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div className="space-y-1">
                 <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -355,9 +355,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     aria-pressed={showPassword}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                     )}
                   </Button>
                 </div>
@@ -439,7 +439,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               disabled={loading}
               aria-label="Continue with Google account"
             >
-              <Chrome className="h-4 w-4 mr-2" aria-hidden="true" />
+              <Chrome className="h-4 w-4 mr-2 text-gray-700 dark:text-gray-300" aria-hidden="true" />
               Continue with Google
             </Button>
 

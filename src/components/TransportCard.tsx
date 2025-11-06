@@ -96,7 +96,7 @@ const TransportCard = ({
                 </Button>
               )}
               <Button variant="outline" size="sm">
-                <Phone className="w-4 h-4" />
+                <Phone className="w-4 h-4 mr-2 text-gray-700 dark:text-gray-300" />
                 {t('transport.contact')}
               </Button>
             </div>

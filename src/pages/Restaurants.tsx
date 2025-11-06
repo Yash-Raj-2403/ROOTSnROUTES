@@ -999,7 +999,7 @@ const Restaurants = () => {
       </section>
 
       {/* Advanced Filtering Section */}
-      <section className="py-8 bg-black border-b border-gray-800">
+      <section className="py-8 bg-gray-950 dark:bg-gray-950 border-b border-gray-800">
         <div className="container mx-auto px-6">
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">
@@ -1010,7 +1010,7 @@ const Restaurants = () => {
                 placeholder="Search restaurants by name, location, or cuisine..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 text-lg bg-gray-900 border-gray-700 text-white placeholder-gray-400"
+                className="pl-10 h-12 text-lg bg-gray-900 dark:bg-gray-900 border-gray-700 text-white placeholder-gray-400"
               />
             </div>
           </div>

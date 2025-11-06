@@ -144,8 +144,43 @@ return <h1>{t('header.home')}</h1>;
 | Feature | Implementation Details | Technologies Used |
 |---------|----------------------|-------------------|
 | ⚡ **Optimized Build** | Code splitting with manual chunks (React, Radix UI, A-Frame, Maps). Tree-shaking and minification. Build size: ~800KB gzipped. | Vite, Rollup, Terser |
-| 📱 **Progressive Web App** | Service worker for offline functionality, cached assets, and fast loading. Installable on mobile devices. | Service Worker API, Web App Manifest |
+| 📱 **Progressive Web App** | Full PWA with advanced service worker, offline support, install prompt, background sync, push notifications ready. Installable on all devices. Works offline with cached content. | Service Worker API, Web App Manifest, Cache API |
 | 🚀 **Performance Metrics** | Lazy loading images, route-based code splitting, optimized re-renders with React.memo, debounced search. | React optimization, Vite HMR |
+
+---
+
+## 📱 Progressive Web App (PWA)
+
+ROOTSnROUTES is a **fully functional Progressive Web App** that can be installed on any device!
+
+### **PWA Features**
+
+| Feature | Description |
+|---------|-------------|
+| 🔧 **Advanced Service Worker** | Intelligent caching strategies: Static cache (app shell), Dynamic cache (pages), Image cache, API cache with offline fallback |
+| 📴 **Offline Support** | Works offline! Browse previously loaded destinations, itineraries, and marketplace. Custom offline page with connection status. |
+| ⬇️ **Install Prompt** | Smart install banner appears after 30 seconds. One-click installation on home screen. |
+| 🔔 **Push Notifications** | Infrastructure ready for trip reminders and booking updates (can be enabled). |
+| 🔄 **Background Sync** | Syncs offline actions (bookings, itineraries) when connection is restored. |
+| 🎨 **App Shortcuts** | Quick access to Explore, AI Planner, Marketplace, and Chatbot from home screen icon. |
+| 🌐 **Offline Indicator** | Real-time connection status with beautiful alerts when going online/offline. |
+| 📤 **Web Share API** | Share itineraries and destinations directly from the app. |
+
+### **How to Install**
+
+**On Mobile (Android/iOS)**:
+1. Visit the website in your browser
+2. Look for "Add to Home Screen" or "Install App"
+3. Tap Install
+4. App appears on your home screen!
+
+**On Desktop (Chrome/Edge)**:
+1. Visit the website
+2. Click the install icon (⊕) in address bar
+3. Click Install
+4. App opens in its own window!
+
+For detailed PWA setup and testing, see [PWA_GUIDE.md](PWA_GUIDE.md)
 
 ---
 
