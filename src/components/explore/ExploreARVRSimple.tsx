@@ -413,7 +413,7 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
           <div className="absolute top-4 right-4 z-50">
             <Button 
               onClick={exitImmersive} 
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold shadow-2xl border-2 border-white"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white font-bold shadow-2xl border-2 border-white active:scale-95"
               size="lg"
             >
               <X className="w-5 h-5 mr-2" />
