@@ -8,7 +8,7 @@ import { Badge } from './ui/badge';
 import { useToast } from './ui/use-toast';
 import { Calendar, Clock, MapPin, Users, Sparkles, Download, Share, Loader2, ExternalLink, Hotel, Utensils, ShoppingBag, Ticket } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Groq from 'groq-sdk';
 
 interface TripPreferences {
@@ -81,6 +81,7 @@ const AITripPlanner = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [preferences, setPreferences] = useState<TripPreferences>({
     duration: '',
     budget: '',
@@ -148,6 +149,32 @@ const AITripPlanner = () => {
       }));
     }
   }, [generatedItinerary, preferences]);
+
+  // Auto-select region when coming from map with district parameter
+  useEffect(() => {
+    const stateDistrict = location.state?.district;
+    if (stateDistrict && preferences.targetAreas.length === 0) {
+      // Find which region contains this district
+      const matchingRegion = jharkhandAreas.find(area => 
+        area.districts.some(district => 
+          district.toLowerCase() === stateDistrict.toLowerCase()
+        )
+      );
+
+      if (matchingRegion) {
+        setPreferences(prev => ({
+          ...prev,
+          targetAreas: [matchingRegion.name]
+        }));
+        
+        toast({
+          title: `${stateDistrict} Selected! 📍`,
+          description: `Auto-selected ${matchingRegion.name} based on your map selection. You can change this below.`,
+          duration: 5000,
+        });
+      }
+    }
+  }, [location.state, toast]);
 
   const interestOptions = [
     'Tribal Culture', 'Waterfalls', 'Wildlife', 'Temples', 'Handicrafts', 
