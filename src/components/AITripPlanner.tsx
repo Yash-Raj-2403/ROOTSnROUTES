@@ -98,6 +98,8 @@ const AITripPlanner = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedItinerary, setGeneratedItinerary] = useState<GeneratedItinerary | null>(null);
   const [step, setStep] = useState(1);
+  const [planningMode, setPlanningMode] = useState<'form' | 'text'>('form');
+  const [textPrompt, setTextPrompt] = useState('');
 
   // Cache for API responses
   const itineraryCache = useMemo(() => new Map<string, GeneratedItinerary>(), []);
@@ -568,6 +570,144 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
     }
   }, [preferences, itineraryCache]);
 
+  // Text-Based Trip Planning Function
+  const generateItineraryFromText = async () => {
+    if (!textPrompt.trim()) {
+      toast({
+        title: "Please Describe Your Trip",
+        description: "Tell us about your perfect trip in the text area above.",
+        variant: "destructive",
+        duration: 3000
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      
+      if (!apiKey || apiKey === 'your_groq_api_key_here' || apiKey.trim() === '') {
+        toast({
+          title: "Configuration Required",
+          description: "Groq API key is not configured. Please add VITE_GROQ_API_KEY to your .env file.",
+          variant: "destructive",
+          duration: 8000
+        });
+        setIsGenerating(false);
+        return;
+      }
+
+      const groq = new Groq({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true
+      });
+
+      const prompt = `You are an expert travel planner specializing in Jharkhand tourism. Based on the user's description, create a detailed, realistic itinerary.
+
+**User's Trip Description:**
+"${textPrompt}"
+
+**Available Regions in Jharkhand:**
+${jharkhandAreas.map(area => `
+- ${area.name}: Districts: ${area.districts.join(', ')}
+  Highlights: ${area.highlights.join(', ')}
+  Best for: ${area.bestFor.join(', ')}`).join('')}
+
+**CRITICAL INSTRUCTIONS:**
+1. Parse the user's description to extract:
+   - Trip duration (number of days)
+   - Budget preference (if mentioned)
+   - Places they want to visit (in the order they mentioned)
+   - Activities they want to do
+   - Any special preferences
+
+2. Create a day-by-day itinerary following EXACTLY the sequence and preferences they mentioned
+3. If they say "first visit X, then Y", make sure Day 1 includes X and Day 2 includes Y
+4. Include realistic timing, costs, and travel directions
+5. Add meals and accommodation for each day
+6. Provide cultural tips and recommendations
+
+Return response in this EXACT JSON format:
+{
+  "title": "Brief trip title",
+  "description": "One sentence summary",
+  "totalCost": "Estimated total (e.g., ₹12,000)",
+  "days": [
+    {
+      "day": 1,
+      "title": "Day title",
+      "activities": [
+        {
+          "time": "09:00 AM",
+          "activity": "Activity name",
+          "location": "Specific location",
+          "description": "Detailed description",
+          "duration": "2 hours",
+          "cost": "₹500",
+          "type": "Sightseeing"
+        }
+      ],
+      "meals": [
+        {
+          "time": "12:00 PM",
+          "type": "Lunch",
+          "restaurant": "Restaurant name",
+          "cuisine": "Cuisine type",
+          "cost": "₹400"
+        }
+      ],
+      "accommodation": {
+        "name": "Accommodation name",
+        "type": "Hotel/Homestay",
+        "location": "Location",
+        "cost": "₹2,000"
+      },
+      "totalDayCost": "₹3,500"
+    }
+  ],
+  "recommendations": ["Tip 1", "Tip 2"],
+  "weatherTips": ["Weather tip 1"],
+  "culturalTips": ["Cultural tip 1"]
+}`;
+
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: prompt }],
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.7,
+        max_tokens: 4096
+      });
+
+      const responseText = chatCompletion.choices[0]?.message?.content || '';
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
+        throw new Error('Invalid response format from AI');
+      }
+
+      const itinerary = JSON.parse(jsonMatch[0]) as GeneratedItinerary;
+      setGeneratedItinerary(itinerary);
+      setStep(3);
+
+      toast({
+        title: "✨ Itinerary Created!",
+        description: `Your custom ${itinerary.days.length}-day trip plan is ready!`,
+        duration: 4000
+      });
+
+    } catch (error: any) {
+      console.error('Error generating itinerary:', error);
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Please try again with a clearer description.",
+        variant: "destructive",
+        duration: 5000
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const generateAreaBasedDays = (): ItineraryDay[] => {
     const days = parseInt(preferences.duration) || 3;
     const mockDays: ItineraryDay[] = [];
@@ -888,9 +1028,77 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
             <p className="text-muted-foreground text-lg">
               Tell us your preferences, and our AI will create the perfect Jharkhand itinerary
             </p>
+            
+            {/* Planning Mode Toggle */}
+            <div className="flex justify-center gap-4 mt-6">
+              <Button
+                variant={planningMode === 'form' ? 'default' : 'outline'}
+                onClick={() => setPlanningMode('form')}
+                className="flex items-center gap-2"
+              >
+                <Calendar className="w-4 h-4" />
+                Form-Based Planning
+              </Button>
+              <Button
+                variant={planningMode === 'text' ? 'default' : 'outline'}
+                onClick={() => setPlanningMode('text')}
+                className="flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Text-Based Planning
+              </Button>
+            </div>
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {planningMode === 'text' ? (
+              /* Text-Based Planning UI */
+              <div className="space-y-4">
+                <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 rounded-lg border-2 border-primary/20">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Describe Your Perfect Trip
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Tell us about your dream trip in your own words. For example:
+                  </p>
+                  <div className="bg-background/50 p-4 rounded-md mb-4 text-sm italic border border-border">
+                    "I want a 3-day adventure trip in Ranchi. First day I want to visit Hundru Falls in the morning, 
+                    then Rock Garden in the evening. Second day take me to Ranchi Lake and tribal museum. 
+                    Third day I want to explore local markets and try tribal cuisine. Budget is ₹15,000."
+                  </div>
+                  <Textarea
+                    placeholder="Describe your trip... (e.g., 'I want to visit waterfalls on day 1, then temples on day 2, followed by tribal villages...')"
+                    value={textPrompt}
+                    onChange={(e) => setTextPrompt(e.target.value)}
+                    className="min-h-[200px] text-base"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    💡 Tip: Include duration, budget, places you want to visit, activities, and any special preferences
+                  </p>
+                </div>
+                
+                <Button
+                  onClick={() => generateItineraryFromText()}
+                  disabled={isGenerating || !textPrompt.trim()}
+                  className="w-full h-12 text-lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Creating Your Perfect Itinerary...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Generate My Trip Plan
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              /* Form-Based Planning UI */
+              <>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium mb-2 block">Trip Duration</label>
@@ -1099,6 +1307,8 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
             >
               Next: Review Preferences
             </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
