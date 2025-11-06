@@ -245,7 +245,7 @@ const LeafletMap = () => {
       speciality: 'Natural Beauty',
       description: 'Known for beautiful waterfalls and tribal heritage.',
       icon: '🏔️',
-      color: '#9333EA',
+      color: '#10b981',
       destinations: getDistrictDestinations('Gumla'),
       categories: ['nature', 'heritage']
     },

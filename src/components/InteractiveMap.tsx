@@ -236,7 +236,7 @@ const InteractiveMap = () => {
                 {/* Rivers */}
                 <path
                   d="M200 120 Q300 140 400 180 Q350 220 300 250 Q250 280 200 320"
-                  stroke="rgba(59, 130, 246, 0.4)"
+                  stroke="rgba(20, 184, 166, 0.4)"
                   strokeWidth="3"
                   fill="none"
                   strokeLinecap="round"
@@ -258,7 +258,7 @@ const InteractiveMap = () => {
                       cy={district.coordinates.y}
                       r={hoveredDistrict === district.id ? 25 : 20}
                       fill={selectedDistrict?.id === district.id ? 
-                        "rgba(59, 130, 246, 0.9)" : 
+                        "rgba(16, 185, 129, 0.9)" : 
                         hoveredDistrict === district.id ?
                         "rgba(34, 197, 94, 0.8)" :
                         "rgba(34, 197, 94, 0.6)"
@@ -301,7 +301,7 @@ const InteractiveMap = () => {
                         cy={district.coordinates.y}
                         r="30"
                         fill="none"
-                        stroke="rgba(59, 130, 246, 0.5)"
+                        stroke="rgba(16, 185, 129, 0.5)"
                         strokeWidth="2"
                         className="animate-ping"
                       />
