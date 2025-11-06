@@ -206,24 +206,20 @@ const SmartWeatherRecommendations = () => {
     const locationData = locationSpecificData[weather.location] || locationSpecificData['Ranchi'];
 
     // Waterfall Activities
-    if (weather.temperature >= 20 && weather.temperature <= 30 && weather.condition !== 'Heavy Rain' && locationData.waterfalls.length > 0) {
-      const mainWaterfall = locationData.waterfalls[0];
+    if (weather.temperature >= 20 && weather.temperature <= 30 && weather.condition !== 'Heavy Rain') {
       activities.push({
-        activity: `Visit ${mainWaterfall}`,
+        activity: `${weather.location} Waterfall Experience`,
         suitability: weather.precipitation > 0 ? 'excellent' : 'good',
-        reason: weather.precipitation > 0 ? 
-          `Recent rains have made ${mainWaterfall} absolutely spectacular with maximum water flow! Perfect time for stunning photos.` : 
-          `Perfect ${weather.temperature}°C weather for exploring ${mainWaterfall} and nearby cascades.`,
+        reason: weather.precipitation > 0 ? 'Recent rains make waterfalls spectacular!' : 'Perfect weather for waterfall trekking',
         tips: [
-          `${mainWaterfall} is best visited in morning for fewer crowds`,
-          'Wear non-slip footwear - rocks can be slippery',
-          'Carry waterproof camera cover for splash protection',
-          weather.precipitation > 0 ? 'Water flow is strong - maintain safe distance' : 'Water flow is moderate - great for closer views',
-          `Nearby attractions: ${locationData.waterfalls.slice(1).join(', ') || 'Local viewpoints'}`
+          'Wear non-slip footwear',
+          'Carry waterproof camera cover',
+          'Start early to avoid afternoon heat',
+          'Check local water levels before visiting'
         ],
         locations: locationData.waterfalls,
-        bestTime: weather.precipitation > 0 ? '08:00 - 10:00 AM (avoid afternoon flash floods)' : '07:00 - 11:00 AM',
-        equipment: ['Trekking shoes', 'Waterproof bag', 'Swimming clothes (if applicable)', 'First aid kit'],
+        bestTime: '07:00 - 11:00 AM',
+        equipment: ['Trekking shoes', 'Waterproof bag', 'First aid kit'],
         cost: '₹200-500',
         icon: '💧',
         category: 'outdoor'
@@ -231,161 +227,88 @@ const SmartWeatherRecommendations = () => {
     }
 
     // Wildlife Safari
-    if (weather.temperature >= 15 && weather.temperature <= 32 && weather.condition !== 'Heavy Rain' && locationData.wildlife.length > 0) {
-      const mainWildlifePark = locationData.wildlife[0];
-      const wildlifeType = mainWildlifePark.includes('Betla') || mainWildlifePark.includes('Tiger') ? 'tigers, elephants, and leopards' :
-                           mainWildlifePark.includes('Dalma') ? 'elephants and deer' :
-                           mainWildlifePark.includes('Saranda') ? 'elephants and diverse bird species' :
-                           'local wildlife and birds';
-      
+    if (weather.temperature >= 15 && weather.temperature <= 32 && weather.condition !== 'Heavy Rain') {
       activities.push({
-        activity: `${mainWildlifePark} Safari`,
+        activity: `${weather.location} Wildlife Safari`,
         suitability: weather.temperature <= 28 ? 'excellent' : 'good',
-        reason: weather.temperature <= 25 ? 
-          `Perfect ${weather.temperature}°C temperature! Animals are highly active and visible. Best chances to spot ${wildlifeType}.` :
-          `At ${weather.temperature}°C, animals will be active during early morning and evening. Plan your safari accordingly.`,
+        reason: `${weather.temperature}°C is ideal for wildlife spotting. Animals are more active in this weather.`,
         tips: [
-          `${mainWildlifePark} requires advance booking - reserve 2-3 days ahead`,
-          `Best for spotting: ${wildlifeType}`,
-          'Carry binoculars and zoom camera for distant wildlife',
-          'Maintain complete silence during safari',
-          weather.temperature > 28 ? 'Prefer morning safari (06:00-09:00) as animals rest in afternoon heat' : 'Animals are active throughout the day in this weather',
-          `Other nearby wildlife spots: ${locationData.wildlife.slice(1).join(', ') || 'Local forest trails'}`
+          'Book safari in advance',
+          'Carry binoculars',
+          'Maintain silence during safari',
+          'Early morning safaris are best',
+          'Follow park guidelines strictly'
         ],
         locations: locationData.wildlife,
-        bestTime: weather.temperature <= 25 ? '06:00-10:00 AM & 14:00-17:00 PM' : '06:00-09:00 AM (morning safari only)',
-        equipment: ['Binoculars', 'Camera with 200mm+ telephoto lens', 'Hat', 'Sunscreen', 'Water bottle'],
-        cost: mainWildlifePark.includes('Betla') || mainWildlifePark.includes('Tiger') ? '₹2,500-4,500' : '₹1,500-3,000',
+        bestTime: weather.temperature <= 25 ? 'All day' : '06:00-10:00, 15:00-18:00',
+        equipment: ['Binoculars', 'Camera with telephoto lens', 'Hat', 'Sunscreen'],
+        cost: '₹1,500-3,000',
         icon: '🦁',
         category: 'outdoor'
       });
     }
 
     // Hill Station Visit
-    if (weather.temperature >= 12 && weather.temperature <= 28 && locationData.hills.length > 0) {
-      const mainHill = locationData.hills[0];
-      const hillSpecialty = mainHill.includes('Parasnath') ? 'highest peak in Jharkhand (1,350m) and sacred Jain pilgrimage site' :
-                           mainHill.includes('Netarhat') ? 'Queen of Chotanagpur - famous for mesmerizing sunrise/sunset views' :
-                           mainHill.includes('Tagore') ? 'historical hilltop with panoramic city views' :
-                           mainHill.includes('Dalma') ? 'wildlife sanctuary with elephant migration routes' :
-                           mainHill.includes('Trikut') ? 'temple town with Asia\'s highest vertical ropeway' :
-                           mainHill.includes('Nandan Pahar') ? 'amusement park with scenic hilltop views' :
-                           'scenic hilltop viewpoints';
-      
-      const recommendedStay = mainHill.includes('Netarhat') || mainHill.includes('Parasnath');
-      
+    if (weather.temperature >= 12 && weather.temperature <= 28) {
       activities.push({
-        activity: `Explore ${mainHill}`,
+        activity: `${weather.location} Hill Exploration`,
         suitability: weather.temperature <= 25 ? 'excellent' : 'good',
-        reason: `Perfect ${weather.temperature}°C for hillside exploration! ${mainHill} is known as the ${hillSpecialty}. ${weather.temperature <= 20 ? 'Crisp mountain air and clear views expected!' : 'Comfortable weather for sightseeing.'}`,
+        reason: `Perfect ${weather.temperature}°C weather for hill exploration and scenic viewing.`,
         tips: [
-          weather.temperature <= 20 ? 'Carry warm jacket/sweater - temperature drops at higher altitude' : 'Light jacket recommended for evening breeze',
-          recommendedStay ? `Consider overnight stay to experience ${mainHill.includes('Netarhat') ? 'magical sunrise/sunset' : 'sunrise from summit'}` : 'Perfect for day trip',
-          mainHill.includes('Parasnath') ? 'Sacred site - dress modestly, maintain silence near temples, no leather items' :
-          mainHill.includes('Trikut') ? 'Take the cable car ride - breathtaking 360° views' :
-          mainHill.includes('Netarhat') ? 'Visit Magnolia Sunset Point and Lower Ghaghri Falls nearby' :
-          `Don't miss the panoramic viewpoints at ${mainHill}`,
-          'Try local specialties like litti chokha and local tea at hilltop stalls',
-          'Best photography spots are marked at the summit',
-          `Other nearby hills: ${locationData.hills.slice(1).join(', ') || 'Local viewpoints'}`
+          'Carry warm clothes for early morning/evening',
+          'Book accommodation in advance',
+          'Don\'t miss the sunrise/sunset points',
+          'Try local tea and snacks',
+          'Wear comfortable walking shoes'
         ],
         locations: locationData.hills,
-        bestTime: `All day${mainHill.includes('Netarhat') || mainHill.includes('Parasnath') ? ', sunrise at ' + weather.sunrise + ' (highly recommended)' : ''}`,
-        equipment: ['Warm jacket', 'Camera with wide-angle lens', 'Comfortable walking shoes', recommendedStay ? 'Overnight bag' : 'Daypack'],
-        cost: recommendedStay ? '₹2,000-4,000 (with stay)' : '₹500-1,500',
+        bestTime: 'All day, sunrise at 06:15',
+        equipment: ['Warm jacket', 'Camera', 'Comfortable walking shoes'],
+        cost: '₹2,000-4,000',
         icon: '⛰️',
         category: 'outdoor'
       });
     }
 
     // Photography Activities
-    if (weather.visibility >= 8 && weather.condition !== 'Heavy Rain' && locationData.photography.length > 0) {
-      const topPhotoSpot = locationData.photography[0];
-      const photoTheme = topPhotoSpot.includes('Hundru') || topPhotoSpot.includes('Falls') || topPhotoSpot.includes('Waterfall') ? 'cascading waterfalls and misty gorges' :
-                        topPhotoSpot.includes('Betla') || topPhotoSpot.includes('Wildlife') || topPhotoSpot.includes('Safari') ? 'wildlife and forest landscapes' :
-                        topPhotoSpot.includes('Dam') || topPhotoSpot.includes('Lake') || topPhotoSpot.includes('Reservoir') ? 'serene water reflections and dam architecture' :
-                        topPhotoSpot.includes('Hill') || topPhotoSpot.includes('Rock') ? 'hilltop vistas and rock formations' :
-                        topPhotoSpot.includes('Temple') || topPhotoSpot.includes('Fort') ? 'heritage architecture and cultural sites' :
-                        topPhotoSpot.includes('Tribal') || topPhotoSpot.includes('Village') ? 'tribal culture and traditional life' :
-                        'scenic landscapes and local culture';
-      
-      const lightingTips = weather.condition === 'Partly Cloudy' ? 'Perfect! Clouds add dramatic effect to photos - diffused light reduces harsh shadows' :
-                          weather.condition === 'Clear' ? 'Clear skies - shoot during golden hours to avoid harsh midday sun' :
-                          'Current conditions create unique atmospheric shots';
-      
+    if (weather.visibility >= 8 && weather.condition !== 'Heavy Rain') {
       activities.push({
-        activity: `Photography at ${topPhotoSpot}`,
+        activity: `${weather.location} Photography Tour`,
         suitability: weather.condition === 'Partly Cloudy' ? 'excellent' : 'good',
-        reason: `Exceptional ${weather.visibility}km visibility! ${topPhotoSpot} is perfect for capturing ${photoTheme}. ${lightingTips}`,
+        reason: `${weather.visibility}km visibility and ${weather.condition} conditions are perfect for photography.`,
         tips: [
-          `Prime time: Golden hours (${weather.sunrise}-08:00 AM, 16:00-${weather.sunset})`,
-          `Specialty shots at ${topPhotoSpot}: ${photoTheme}`,
-          weather.temperature < 15 ? 'Carry spare batteries - cold drains battery 30% faster' : 'Keep extra memory cards',
-          topPhotoSpot.includes('Waterfall') || topPhotoSpot.includes('Falls') ? 'Use ND filter + tripod for silky water effect (1-2 sec exposure)' :
-          topPhotoSpot.includes('Wildlife') || topPhotoSpot.includes('Safari') ? 'Telephoto lens (200-400mm) essential, shoot from vehicle' :
-          topPhotoSpot.includes('Dam') || topPhotoSpot.includes('Lake') ? 'Polarizing filter to reduce water glare and enhance colors' :
-          'Polarizing filter recommended for landscape shots',
-          'Respect local customs - ALWAYS ask permission before photographing people or tribal areas',
-          topPhotoSpot.includes('Tribal') || topPhotoSpot.includes('Village') ? 'Offer small gifts/tips when photographing villagers' :
-          'Interact respectfully with locals',
-          `Other photo spots nearby: ${locationData.photography.slice(1, 3).join(', ') || 'Various viewpoints'}`
+          'Golden hour is best (06:00-08:00, 16:00-18:00)',
+          'Carry extra batteries in cold weather',
+          'Use polarizing filter for landscapes',
+          'Respect local customs when photographing people',
+          'Ask permission before photographing tribal areas'
         ],
         locations: locationData.photography,
-        bestTime: `Golden hours: ${weather.sunrise}-08:00 AM, 16:00-${weather.sunset} PM${weather.condition === 'Partly Cloudy' ? ' (all-day shoot possible with clouds)' : ''}`,
-        equipment: ['DSLR/Mirrorless camera', 'Tripod (essential)', 'ND + Polarizing filters', 'Extra batteries', '64GB+ memory cards', 'Lens cleaning kit'],
-        cost: topPhotoSpot.includes('Wildlife') || topPhotoSpot.includes('Safari') ? '₹1,500-3,000 (safari included)' : '₹300-1,000',
+        bestTime: `Golden hours: ${weather.sunrise}-08:00, 16:00-${weather.sunset}`,
+        equipment: ['DSLR/Mirrorless camera', 'Tripod', 'Filters', 'Extra batteries'],
+        cost: '₹500-1,500',
         icon: '📸',
         category: 'photography'
       });
     }
 
     // Cultural Activities (Indoor/Outdoor based on weather)
-    if (weather.temperature >= 18 && locationData.cultural.length > 0) {
-      const mainCulturalSite = locationData.cultural[0];
-      const culturalType = mainCulturalSite.includes('Tribal') || mainCulturalSite.includes('Village') ? 'authentic tribal villages and indigenous traditions' :
-                          mainCulturalSite.includes('Temple') || mainCulturalSite.includes('Mandir') ? 'ancient temples and religious heritage' :
-                          mainCulturalSite.includes('Fort') || mainCulturalSite.includes('Palace') ? 'historical monuments and royal architecture' :
-                          mainCulturalSite.includes('Museum') || mainCulturalSite.includes('Institute') ? 'museums showcasing tribal art and history' :
-                          mainCulturalSite.includes('Handicraft') || mainCulturalSite.includes('Market') ? 'traditional handicraft centers and artisan workshops' :
-                          'rich cultural heritage and local traditions';
-      
-      const specialActivity = mainCulturalSite.includes('Tribal') || mainCulturalSite.includes('Village') ? 'Witness traditional dance performances, learn about indigenous practices' :
-                             mainCulturalSite.includes('Handicraft') ? 'Watch artisans create Dokra metal craft, Paitkar paintings, bamboo art' :
-                             mainCulturalSite.includes('Temple') ? 'Attend morning/evening aarti, explore temple architecture' :
-                             'Explore local heritage and traditions';
-      
+    if (weather.temperature >= 18) {
       activities.push({
-        activity: `Visit ${mainCulturalSite}`,
+        activity: `${weather.location} Cultural Experience`,
         suitability: weather.precipitation <= 5 ? 'good' : 'fair',
-        reason: weather.precipitation > 5 ? 
-          `Light rain expected. ${mainCulturalSite.includes('Museum') || mainCulturalSite.includes('Temple') ? 'Good - mostly indoor/covered activities available' : 'Outdoor cultural programs may be limited'}` : 
-          `Perfect weather for cultural immersion! ${mainCulturalSite} showcases ${culturalType}.`,
+        reason: weather.precipitation > 5 ? 'Light rain may affect outdoor cultural programs' : 'Good weather for cultural visits and experiences',
         tips: [
-          `Experience: ${specialActivity}`,
-          mainCulturalSite.includes('Tribal') || mainCulturalSite.includes('Village') ? 'Carry small gifts (notebooks, pens, biscuits) for children' :
-          mainCulturalSite.includes('Temple') ? 'Remove shoes, dress modestly (covered shoulders & legs), no leather items' :
-          'Dress respectfully (avoid shorts, sleeveless tops)',
-          'ALWAYS ask permission before photographing people or sacred sites',
-          mainCulturalSite.includes('Handicraft') || mainCulturalSite.includes('Market') ? 'Support local artisans - buy authentic handmade crafts' :
-          mainCulturalSite.includes('Tribal') || mainCulturalSite.includes('Village') ? 'Learn basic Mundari/Santali phrases - locals appreciate the effort' :
-          'Interact respectfully with locals',
-          'Try authentic Jharkhandi cuisine: litti chokha, dhuska, thekua, handia (rice beer)',
-          mainCulturalSite.includes('Museum') || mainCulturalSite.includes('Institute') ? 'Audio guides available - enhances understanding of tribal history' :
-          'Hire local guide for deeper cultural insights (₹300-500)',
-          `Other cultural sites: ${locationData.cultural.slice(1, 3).join(', ') || 'Local markets'}`
+          'Respect local customs and traditions',
+          'Ask permission before photographing',
+          'Participate in traditional activities',
+          'Try authentic local cuisine',
+          'Learn about local history and culture'
         ],
         locations: locationData.cultural,
-        bestTime: mainCulturalSite.includes('Temple') ? '06:00-12:00 (morning aarti), 17:00-20:00 (evening aarti)' : '09:00-17:00',
-        equipment: [
-          mainCulturalSite.includes('Temple') ? 'Modest clothing (scarf for women)' : 'Respectful clothing',
-          mainCulturalSite.includes('Tribal') || mainCulturalSite.includes('Village') ? 'Small gifts for villagers' : 'Small notebook for notes',
-          'Camera (ask permission first)',
-          'Reusable bag for handicraft purchases'
-        ],
-        cost: mainCulturalSite.includes('Temple') ? '₹50-200 (donations)' :
-              mainCulturalSite.includes('Museum') ? '₹50-150 (entry)' :
-              mainCulturalSite.includes('Handicraft') ? '₹500-3,000 (shopping budget)' :
-              '₹1,000-2,500',
+        bestTime: '09:00-17:00',
+        equipment: ['Respectful clothing', 'Small gifts for children', 'Camera (with permission)'],
+        cost: '₹1,000-2,500',
         icon: '🎭',
         category: 'cultural'
       });
@@ -393,39 +316,20 @@ const SmartWeatherRecommendations = () => {
 
     // Indoor Activities for bad weather
     if (weather.precipitation > 10 || weather.temperature < 15 || weather.temperature > 35) {
-      const mainIndoorVenue = locationData.museums.length > 0 ? locationData.museums[0] : 'Ranchi State Museum';
-      
-      const weatherReason = weather.precipitation > 10 ? `Heavy rain (${weather.precipitation}mm) - stay dry indoors!` :
-                           weather.temperature < 15 ? `Cold weather (${weather.temperature}°C) - warm indoor activities recommended` :
-                           `Extreme heat (${weather.temperature}°C) - cool AC comfort indoors`;
-      
-      const venueType = mainIndoorVenue.includes('Museum') ? 'museum showcasing tribal artifacts, history, and heritage' :
-                       mainIndoorVenue.includes('Institute') || mainIndoorVenue.includes('Research') ? 'research center with tribal culture exhibits' :
-                       mainIndoorVenue.includes('Handicraft') || mainIndoorVenue.includes('Center') ? 'artisan workshop where you can learn traditional crafts' :
-                       mainIndoorVenue.includes('Mall') || mainIndoorVenue.includes('Market') ? 'shopping complex with local handicrafts' :
-                       'cultural center';
-      
       activities.push({
-        activity: `Indoor Culture: ${mainIndoorVenue}`,
+        activity: 'Handicraft Workshop & Museum Visit',
         suitability: 'excellent',
-        reason: `${weatherReason} Perfect time to explore ${mainIndoorVenue} - ${venueType}.`,
+        reason: 'Indoor cultural activities are perfect when outdoor conditions are challenging.',
         tips: [
-          `Visit ${mainIndoorVenue} - ${venueType}`,
-          mainIndoorVenue.includes('Museum') || mainIndoorVenue.includes('Institute') ? 'Audio guides available for detailed tribal history' :
-          mainIndoorVenue.includes('Handicraft') || mainIndoorVenue.includes('Center') ? 'Participate in hands-on Dokra metal craft workshop (₹500-1,000)' :
-          'Interactive exhibits showcase Jharkhand heritage',
-          'Learn traditional crafts: Dokra metal work, Paitkar scroll paintings, Sohrai/Khovar art, bamboo crafts',
-          mainIndoorVenue.includes('Museum') ? 'See ancient tribal artifacts, traditional costumes, musical instruments' :
-          'Watch artisans demonstrate traditional techniques',
-          'Shop authentic handicrafts: Dokra figurines (₹300-5,000), Sohrai paintings (₹500-3,000), bamboo products (₹100-1,500)',
-          weather.precipitation > 10 ? 'Many venues have cafes - enjoy chai and local snacks while it rains' :
-          'Take breaks at museum cafe',
-          `Other indoor options: ${locationData.museums.slice(1).join(', ') || 'Local handicraft centers, tribal cultural shows'}`
+          'Learn traditional Dokra metal craft',
+          'Visit State Museum in Ranchi',
+          'Shop for authentic handicrafts',
+          'Attend cultural performances'
         ],
-        locations: locationData.museums.length > 0 ? locationData.museums : ['Ranchi State Museum', 'Tribal Research Institute', 'Local Handicraft Centers', 'Science Centers'],
-        bestTime: mainIndoorVenue.includes('Museum') || mainIndoorVenue.includes('Institute') ? '10:00-17:00 (closed Mondays)' : '10:00-19:00',
-        equipment: ['Comfortable clothing', 'Notebook for workshop notes', 'Reusable shopping bag', weather.precipitation > 10 ? 'Umbrella/raincoat' : 'Light bag'],
-        cost: mainIndoorVenue.includes('Museum') || mainIndoorVenue.includes('Institute') ? '₹50-200 (entry) + ₹500-2,000 (shopping)' : '₹300-1,500',
+        locations: ['Ranchi State Museum', 'Tribal Research Institute', 'Local Handicraft Centers'],
+        bestTime: '10:00-17:00',
+        equipment: ['Comfortable clothing', 'Notebook for learning', 'Shopping bag'],
+        cost: '₹300-1,000',
         icon: '🏛️',
         category: 'indoor'
       });

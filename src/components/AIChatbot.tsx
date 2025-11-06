@@ -93,113 +93,18 @@ const AIChatbot = () => {
     { label: "Emergency", action: "emergency", icon: "🚨" }
   ];
 
-  // AI Response Generation using Groq API
+  // AI Response Generation (Mock - in production use OpenAI API)
   const generateAIResponse = async (userMessage: string): Promise<ChatMessage> => {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const lowerMessage = userMessage.toLowerCase();
     
-    // Set typing state
+    // Simulate AI thinking time
     setChatState(prev => ({ ...prev, isTyping: true }));
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setChatState(prev => ({ ...prev, isTyping: false }));
 
-    try {
-      // Check if API key is available
-      if (!apiKey || apiKey === 'your_new_groq_api_key_here') {
-        console.warn('⚠️ Groq API key not configured. Using fallback responses.');
-        setChatState(prev => ({ ...prev, isTyping: false }));
-        return generateFallbackResponse(userMessage);
-      }
-
-      // Call Groq API
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a helpful AI travel assistant specializing in Jharkhand tourism. Provide accurate, engaging information about:
-- Tourist destinations (waterfalls, temples, wildlife, hill stations)
-- Accommodation (hotels, homestays, eco-lodges)
-- Local cuisine and restaurants
-- Transportation and travel tips
-- Cultural experiences and festivals
-- Emergency services and safety
-- Budget planning and costs
-
-Keep responses concise, friendly, and actionable. Use emojis appropriately. Always provide 3-5 relevant follow-up suggestions.`
-            },
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ],
-          max_tokens: 800,
-          temperature: 0.7,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const aiContent = data.choices?.[0]?.message?.content || 'Sorry, I couldn\'t generate a response.';
-
-      setChatState(prev => ({ ...prev, isTyping: false }));
-
-      // Generate context-aware suggestions
-      const suggestions = generateSmartSuggestions(userMessage, aiContent);
-
-      return {
-        id: Date.now().toString(),
-        type: 'bot',
-        message: aiContent,
-        timestamp: new Date(),
-        suggestions
-      };
-
-    } catch (error) {
-      console.error('❌ Groq API Error:', error);
-      setChatState(prev => ({ ...prev, isTyping: false }));
-      
-      // Fallback to rule-based responses
-      return generateFallbackResponse(userMessage);
-    }
-  };
-
-  // Smart suggestion generator based on context
-  const generateSmartSuggestions = (userMessage: string, aiResponse: string): string[] => {
-    const lowerMessage = userMessage.toLowerCase();
-    const lowerResponse = aiResponse.toLowerCase();
-    
-    if (lowerMessage.includes('destination') || lowerResponse.includes('waterfall') || lowerResponse.includes('temple')) {
-      return ["Show waterfall details", "Best time to visit", "Nearby attractions", "How to reach", "Accommodation options"];
-    } else if (lowerMessage.includes('food') || lowerResponse.includes('cuisine')) {
-      return ["Show restaurant locations", "Vegetarian options", "Street food guide", "Cooking experiences", "Food festivals"];
-    } else if (lowerMessage.includes('stay') || lowerResponse.includes('hotel')) {
-      return ["Tribal homestays", "Budget options", "Luxury resorts", "Eco-lodges", "Book accommodation"];
-    } else if (lowerMessage.includes('culture') || lowerResponse.includes('festival')) {
-      return ["Festival calendar", "Cultural events", "Art workshops", "Village tours", "Traditional performances"];
-    } else if (lowerMessage.includes('plan') || lowerResponse.includes('itinerary')) {
-      return ["2-day trip plan", "Weekend getaway", "Cultural tour", "Adventure activities", "AI trip planner"];
-    } else {
-      return ["Top destinations", "Local experiences", "Travel tips", "Plan my trip", "Emergency contacts"];
-    }
-  };
-
-  // Fallback response generator (used when API is unavailable)
-  const generateFallbackResponse = (userMessage: string): ChatMessage => {
-    const lowerMessage = userMessage.toLowerCase();
-    
     let response = "";
     let suggestions: string[] = [];
     let quickActions: QuickAction[] = [];
-
-    // Add notice about fallback mode
-    const fallbackNotice = "ℹ️ *Using offline mode* - For more personalized responses, please configure Groq API.\n\n";
 
     // Smart response based on keywords
     if (lowerMessage.includes('destination') || lowerMessage.includes('place') || lowerMessage.includes('visit')) {
@@ -254,7 +159,7 @@ Keep responses concise, friendly, and actionable. Use emojis appropriately. Alwa
     return {
       id: Date.now().toString(),
       type: 'bot',
-      message: fallbackNotice + response,
+      message: response,
       timestamp: new Date(),
       suggestions,
       quickActions

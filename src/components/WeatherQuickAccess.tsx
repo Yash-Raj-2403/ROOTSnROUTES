@@ -38,7 +38,7 @@ const WeatherQuickAccess: React.FC = () => {
           </div>
 
           <Link to="/weather">
-            <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white">
+            <Button className="w-full bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white">
               <Cloud className="h-4 w-4 mr-2" />
               View Weather Dashboard
             </Button>

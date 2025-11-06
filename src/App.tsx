@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import FloatingChatbot from './components/FloatingChatbot';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import OfflineIndicator from './components/OfflineIndicator';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -150,6 +151,7 @@ const App = () => {
               </AppErrorBoundary>
               <FloatingChatbot />
               <PWAInstallPrompt />
+              <OfflineIndicator />
               <Toaster />
             </UserPreferencesProvider>
           </AuthProvider>

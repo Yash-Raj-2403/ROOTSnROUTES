@@ -1,76 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { isOnline, setupNetworkListeners } from '@/utils/pwa';
+import { useToast } from '@/hooks/use-toast';
 
 const OfflineIndicator: React.FC = () => {
-  const [online, setOnline] = useState(isOnline());
-  const [showOfflineAlert, setShowOfflineAlert] = useState(false);
-  const [showOnlineAlert, setShowOnlineAlert] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showBanner, setShowBanner] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Setup network listeners
-    const cleanup = setupNetworkListeners(
-      () => {
-        setOnline(true);
-        setShowOfflineAlert(false);
-        setShowOnlineAlert(true);
-        
-        // Hide online alert after 3 seconds
-        setTimeout(() => {
-          setShowOnlineAlert(false);
-        }, 3000);
-      },
-      () => {
-        setOnline(false);
-        setShowOnlineAlert(false);
-        setShowOfflineAlert(true);
-      }
-    );
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowBanner(false);
+      toast({
+        title: "Back Online",
+        description: "Your internet connection has been restored.",
+        duration: 3000,
+      });
+    };
 
-    return cleanup;
-  }, []);
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowBanner(true);
+      toast({
+        title: "No Internet Connection",
+        description: "You're offline. Some features may be limited.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    };
 
-  // Persistent offline indicator
-  if (!online && !showOfflineAlert) {
-    return (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white py-2 px-4 text-center text-sm font-medium shadow-lg">
-        <div className="flex items-center justify-center gap-2">
-          <WifiOff className="w-4 h-4" />
-          <span>You're offline - Some features may be limited</span>
-        </div>
-      </div>
-    );
-  }
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Check initial state
+    if (!navigator.onLine) {
+      setShowBanner(true);
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [toast]);
+
+  if (!showBanner) return null;
 
   return (
-    <>
-      {/* Offline Alert */}
-      {showOfflineAlert && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-5">
-          <Alert className="bg-yellow-500 text-white border-0 shadow-2xl max-w-md">
-            <WifiOff className="w-5 h-5" />
-            <AlertDescription className="ml-2">
-              <strong>You're offline</strong>
-              <p className="text-sm mt-1">Don't worry! You can still browse previously loaded content.</p>
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      {/* Back Online Alert */}
-      {showOnlineAlert && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-5">
-          <Alert className="bg-green-500 text-white border-0 shadow-2xl max-w-md">
-            <Wifi className="w-5 h-5" />
-            <AlertDescription className="ml-2">
-              <strong>You're back online!</strong>
-              <p className="text-sm mt-1">All features are now available.</p>
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-    </>
+    <div className="fixed top-0 left-0 right-0 z-50 bg-destructive text-destructive-foreground py-2 px-4 shadow-lg animate-in slide-in-from-top">
+      <div className="container mx-auto flex items-center justify-center gap-2">
+        <WifiOff className="w-5 h-5" />
+        <span className="font-medium">You're offline</span>
+        <span className="hidden sm:inline text-sm opacity-90">
+          - Some features may not be available
+        </span>
+      </div>
+    </div>
   );
 };
 

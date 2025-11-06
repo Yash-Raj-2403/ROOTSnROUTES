@@ -350,11 +350,11 @@ const PredictiveBookingSystem = () => {
                 <p className="text-sm text-muted-foreground">Prediction Accuracy</p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-emerald-600">{analytics.totalPredictions}</div>
+                <div className="text-3xl font-bold text-blue-600">{analytics.totalPredictions}</div>
                 <p className="text-sm text-muted-foreground">Total Predictions</p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">{recommendations.length}</div>
+                <div className="text-3xl font-bold text-purple-600">{recommendations.length}</div>
                 <p className="text-sm text-muted-foreground">Active Recommendations</p>
               </div>
             </div>

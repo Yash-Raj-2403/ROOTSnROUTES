@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -6,9 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { useToast } from './ui/use-toast';
-import { Calendar, Clock, MapPin, Users, Sparkles, Download, Share, Loader2, ExternalLink, Hotel, Utensils, ShoppingBag, Ticket } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Sparkles, Download, Share, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useNavigate, useLocation } from 'react-router-dom';
 import Groq from 'groq-sdk';
 
 interface TripPreferences {
@@ -80,8 +79,6 @@ interface GeneratedItinerary {
 const AITripPlanner = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const location = useLocation();
   const [preferences, setPreferences] = useState<TripPreferences>({
     duration: '',
     budget: '',
@@ -98,85 +95,9 @@ const AITripPlanner = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedItinerary, setGeneratedItinerary] = useState<GeneratedItinerary | null>(null);
   const [step, setStep] = useState(1);
-  const [planningMode, setPlanningMode] = useState<'form' | 'text'>('form');
-  const [textPrompt, setTextPrompt] = useState('');
 
   // Cache for API responses
   const itineraryCache = useMemo(() => new Map<string, GeneratedItinerary>(), []);
-
-  // Load saved itinerary on component mount
-  useEffect(() => {
-    const savedItinerary = localStorage.getItem('currentItinerary');
-    if (savedItinerary) {
-      try {
-        const parsed = JSON.parse(savedItinerary);
-        if (parsed && parsed.itinerary && parsed.preferences) {
-          // Validate that targetAreas exist in jharkhandAreas
-          const validAreas = parsed.preferences.targetAreas?.filter((area: string) => 
-            jharkhandAreas.some(a => a.name === area)
-          ) || [];
-          
-          setGeneratedItinerary(parsed.itinerary);
-          setPreferences({
-            ...parsed.preferences,
-            targetAreas: validAreas
-          });
-          toast({
-            title: "Welcome Back! 👋",
-            description: "Your previous trip itinerary has been restored.",
-            duration: 4000,
-          });
-        }
-      } catch (error) {
-        console.error('Error loading saved itinerary:', error);
-        // Clear corrupted data
-        localStorage.removeItem('currentItinerary');
-        toast({
-          title: "Fresh Start",
-          description: "Starting with a clean slate - previous data was outdated.",
-          variant: "default",
-          duration: 3000,
-        });
-      }
-    }
-  }, [toast]);
-
-  // Save itinerary whenever it changes
-  useEffect(() => {
-    if (generatedItinerary) {
-      localStorage.setItem('currentItinerary', JSON.stringify({
-        itinerary: generatedItinerary,
-        preferences: preferences,
-        savedAt: new Date().toISOString()
-      }));
-    }
-  }, [generatedItinerary, preferences]);
-
-  // Auto-select region when coming from map with district parameter
-  useEffect(() => {
-    const stateDistrict = location.state?.district;
-    if (stateDistrict && preferences.targetAreas.length === 0) {
-      // Find which region contains this district
-      const matchingRegion = jharkhandAreas.find(area => 
-        area.districts.some(district => 
-          district.toLowerCase() === stateDistrict.toLowerCase()
-        )
-      );
-
-      if (matchingRegion) {
-        setPreferences(prev => ({
-          ...prev,
-          targetAreas: [matchingRegion.name]
-        }));
-        
-        toast({
-          title: `${stateDistrict} Selected! 📍`,
-          description: `Auto-selected ${matchingRegion.name} based on your map selection. You can change this below.`,
-          duration: 5000,
-        });
-      }
-    }
-  }, [location.state, toast]);
 
   const interestOptions = [
     'Tribal Culture', 'Waterfalls', 'Wildlife', 'Temples', 'Handicrafts', 
@@ -296,17 +217,6 @@ const AITripPlanner = () => {
 
   // AI Trip Generation Function using Groq API with caching
   const generateItinerary = useCallback(async () => {
-    // Validate required fields
-    if (!preferences.duration || !preferences.budget || !preferences.groupSize) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields (duration, budget, and group size).",
-        variant: "destructive",
-        duration: 4000
-      });
-      return;
-    }
-    
     setIsGenerating(true);
     
     // Create cache key from preferences
@@ -358,42 +268,9 @@ const AITripPlanner = () => {
 - Group Size: ${preferences.groupSize}
 - Travel Style: ${preferences.travelStyle}
 - Accommodation Preference: ${preferences.accommodation}
+- Target Areas: ${preferences.targetAreas.join(', ') || 'All of Jharkhand'}
 - Interests: ${preferences.interests.join(', ') || 'General sightseeing'}
 - Special Requests: ${preferences.specialRequests || 'None'}
-
-**Available Regions in Jharkhand:**
-${jharkhandAreas.map(area => `
-- ${area.name}: Districts: ${area.districts.join(', ')}
-  Highlights: ${area.highlights.join(', ')}
-  Best for: ${area.bestFor.join(', ')}`).join('')}
-
-**Target Regions:**
-${preferences.targetAreas.length > 0 
-  ? `User specifically wants to visit: ${preferences.targetAreas.join(', ')}.
-  
-  IMPORTANT: Plan the ENTIRE ${preferences.duration}-day itinerary focusing ONLY on these selected regions: ${preferences.targetAreas.join(', ')}.
-  - Include destinations from these specific regions only
-  - Match attractions with user's interests: ${preferences.interests.join(', ')}
-  - Optimize travel routes within these regions
-  - Include the best highlights from: ${preferences.targetAreas.map(area => {
-    const areaData = jharkhandAreas.find(a => a.name === area);
-    return areaData ? areaData.highlights.join(', ') : '';
-  }).filter(Boolean).join('; ')}`
-  : `No specific regions selected. You should intelligently select the BEST ${Math.min(3, Math.ceil(parseInt(preferences.duration) / 2))} districts/regions based on:
-  - User's interests: ${preferences.interests.join(', ')}
-  - Travel duration: ${preferences.duration} days
-  - Travel style: ${preferences.travelStyle}
-  - Budget: ${preferences.budget}
-  
-  Choose regions that:
-  1. Best match their interests (${preferences.interests.join(', ')})
-  2. Are geographically close to minimize travel time
-  3. Offer complementary experiences
-  4. Fit within their ${preferences.duration}-day timeframe
-  
-  Example: If interested in "Waterfalls" + "Nature Photography", focus on Ranchi Region + Hazaribagh Region for waterfall circuit.
-  If interested in "Tribal Culture", focus on Santhal Parganas Region + West Singhbhum Region.`
-}
 
 **CRITICAL REQUIREMENTS:**
 1. Plan activities in SEQUENTIAL ORDER with realistic timing
@@ -508,15 +385,7 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
         messages: [
           {
             role: 'system',
-            content: `You are an expert Jharkhand travel planner with deep knowledge of routes, timings, and logistics. 
-            Create realistic, sequential itineraries with proper time management and travel directions. 
-            ${preferences.targetAreas.length > 0 
-              ? `CRITICAL: The user has specifically selected these regions: ${preferences.targetAreas.join(', ')}. 
-                 You MUST plan the ENTIRE itinerary using ONLY destinations from these selected regions. 
-                 DO NOT include any destinations from other regions.`
-              : 'Intelligently select the best 2-4 regions based on user preferences and create an optimized itinerary.'
-            }
-            Always respond with valid JSON format only.`
+            content: 'You are an expert Jharkhand travel planner with deep knowledge of routes, timings, and logistics. Create realistic, sequential itineraries with proper time management and travel directions. Always respond with valid JSON format only.'
           },
           {
             role: 'user',
@@ -569,144 +438,6 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
       setIsGenerating(false);
     }
   }, [preferences, itineraryCache]);
-
-  // Text-Based Trip Planning Function
-  const generateItineraryFromText = async () => {
-    if (!textPrompt.trim()) {
-      toast({
-        title: "Please Describe Your Trip",
-        description: "Tell us about your perfect trip in the text area above.",
-        variant: "destructive",
-        duration: 3000
-      });
-      return;
-    }
-
-    setIsGenerating(true);
-
-    try {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-      
-      if (!apiKey || apiKey === 'your_groq_api_key_here' || apiKey.trim() === '') {
-        toast({
-          title: "Configuration Required",
-          description: "Groq API key is not configured. Please add VITE_GROQ_API_KEY to your .env file.",
-          variant: "destructive",
-          duration: 8000
-        });
-        setIsGenerating(false);
-        return;
-      }
-
-      const groq = new Groq({
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true
-      });
-
-      const prompt = `You are an expert travel planner specializing in Jharkhand tourism. Based on the user's description, create a detailed, realistic itinerary.
-
-**User's Trip Description:**
-"${textPrompt}"
-
-**Available Regions in Jharkhand:**
-${jharkhandAreas.map(area => `
-- ${area.name}: Districts: ${area.districts.join(', ')}
-  Highlights: ${area.highlights.join(', ')}
-  Best for: ${area.bestFor.join(', ')}`).join('')}
-
-**CRITICAL INSTRUCTIONS:**
-1. Parse the user's description to extract:
-   - Trip duration (number of days)
-   - Budget preference (if mentioned)
-   - Places they want to visit (in the order they mentioned)
-   - Activities they want to do
-   - Any special preferences
-
-2. Create a day-by-day itinerary following EXACTLY the sequence and preferences they mentioned
-3. If they say "first visit X, then Y", make sure Day 1 includes X and Day 2 includes Y
-4. Include realistic timing, costs, and travel directions
-5. Add meals and accommodation for each day
-6. Provide cultural tips and recommendations
-
-Return response in this EXACT JSON format:
-{
-  "title": "Brief trip title",
-  "description": "One sentence summary",
-  "totalCost": "Estimated total (e.g., ₹12,000)",
-  "days": [
-    {
-      "day": 1,
-      "title": "Day title",
-      "activities": [
-        {
-          "time": "09:00 AM",
-          "activity": "Activity name",
-          "location": "Specific location",
-          "description": "Detailed description",
-          "duration": "2 hours",
-          "cost": "₹500",
-          "type": "Sightseeing"
-        }
-      ],
-      "meals": [
-        {
-          "time": "12:00 PM",
-          "type": "Lunch",
-          "restaurant": "Restaurant name",
-          "cuisine": "Cuisine type",
-          "cost": "₹400"
-        }
-      ],
-      "accommodation": {
-        "name": "Accommodation name",
-        "type": "Hotel/Homestay",
-        "location": "Location",
-        "cost": "₹2,000"
-      },
-      "totalDayCost": "₹3,500"
-    }
-  ],
-  "recommendations": ["Tip 1", "Tip 2"],
-  "weatherTips": ["Weather tip 1"],
-  "culturalTips": ["Cultural tip 1"]
-}`;
-
-      const chatCompletion = await groq.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
-        model: 'llama-3.3-70b-versatile',
-        temperature: 0.7,
-        max_tokens: 4096
-      });
-
-      const responseText = chatCompletion.choices[0]?.message?.content || '';
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      
-      if (!jsonMatch) {
-        throw new Error('Invalid response format from AI');
-      }
-
-      const itinerary = JSON.parse(jsonMatch[0]) as GeneratedItinerary;
-      setGeneratedItinerary(itinerary);
-      setStep(3);
-
-      toast({
-        title: "✨ Itinerary Created!",
-        description: `Your custom ${itinerary.days.length}-day trip plan is ready!`,
-        duration: 4000
-      });
-
-    } catch (error: any) {
-      console.error('Error generating itinerary:', error);
-      toast({
-        title: "Generation Failed",
-        description: error.message || "Please try again with a clearer description.",
-        variant: "destructive",
-        duration: 5000
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const generateAreaBasedDays = (): ItineraryDay[] => {
     const days = parseInt(preferences.duration) || 3;
@@ -893,110 +624,6 @@ Return response in this EXACT JSON format:
     });
   };
 
-  const startNewTrip = () => {
-    // Clear saved itinerary from localStorage
-    localStorage.removeItem('currentItinerary');
-    
-    // Reset all state
-    setGeneratedItinerary(null);
-    setPreferences({
-      duration: '',
-      budget: '',
-      interests: [],
-      groupSize: '',
-      travelStyle: '',
-      accommodation: '',
-      specialRequests: '',
-      targetAreas: [],
-      areaFocus: 'multiple',
-      travelRadius: 'flexible'
-    });
-    setStep(1);
-    
-    toast({
-      title: "Fresh Start! ✨",
-      description: "Ready to plan your new Jharkhand adventure!",
-      duration: 3000,
-    });
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Booking Helper Functions
-  const handleBookDestination = (location: string, activity: string) => {
-    // Navigate to destinations page with search query
-    navigate(`/destinations?search=${encodeURIComponent(location)}`);
-    toast({
-      title: "Redirecting to Destinations",
-      description: `Looking for: ${activity} in ${location}`,
-    });
-  };
-
-  const handleBookAccommodation = (accommodationName: string, location: string, type: string) => {
-    // Navigate to stays page with filters
-    if (type.toLowerCase().includes('homestay') || type.toLowerCase().includes('tribal')) {
-      navigate(`/stays?location=${encodeURIComponent(location)}&type=homestay`);
-    } else if (type.toLowerCase().includes('eco') || type.toLowerCase().includes('lodge')) {
-      navigate(`/stays?location=${encodeURIComponent(location)}&type=eco-lodge`);
-    } else if (type.toLowerCase().includes('luxury') || type.toLowerCase().includes('resort')) {
-      navigate(`/stays?location=${encodeURIComponent(location)}&type=luxury`);
-    } else {
-      navigate(`/stays?location=${encodeURIComponent(location)}`);
-    }
-    
-    toast({
-      title: "Finding Accommodations",
-      description: `Searching for ${type} in ${location}`,
-    });
-  };
-
-  const handleBookRestaurant = (restaurantName: string, location: string, cuisine: string) => {
-    // Navigate to restaurants page
-    navigate(`/restaurants?location=${encodeURIComponent(location)}&cuisine=${encodeURIComponent(cuisine)}`);
-    toast({
-      title: "Exploring Restaurants",
-      description: `Looking for ${cuisine} restaurants in ${location}`,
-    });
-  };
-
-  const handleBookTransport = (from: string, to: string) => {
-    // Navigate to transport page
-    navigate(`/transport?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
-    toast({
-      title: "Transport Options",
-      description: `Finding routes from ${from} to ${to}`,
-    });
-  };
-
-  const handleBookMarketplace = (location: string) => {
-    // Navigate to marketplace for local goods
-    navigate(`/marketplace?location=${encodeURIComponent(location)}`);
-    toast({
-      title: "Local Marketplace",
-      description: `Browse handicrafts and souvenirs from ${location}`,
-    });
-  };
-
-  const handleBookEntireItinerary = () => {
-    // Store itinerary in localStorage for booking flow
-    if (generatedItinerary) {
-      localStorage.setItem('pendingItinerary', JSON.stringify({
-        itinerary: generatedItinerary,
-        preferences: preferences,
-        timestamp: new Date().toISOString()
-      }));
-      
-      navigate('/stays?itinerary=true');
-      
-      toast({
-        title: "🎉 Starting Booking Process",
-        description: "Let's book your entire trip! Starting with accommodations...",
-        duration: 5000
-      });
-    }
-  };
-
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-8">
       {[1, 2, 3].map((num) => (
@@ -1028,77 +655,9 @@ Return response in this EXACT JSON format:
             <p className="text-muted-foreground text-lg">
               Tell us your preferences, and our AI will create the perfect Jharkhand itinerary
             </p>
-            
-            {/* Planning Mode Toggle */}
-            <div className="flex justify-center gap-4 mt-6">
-              <Button
-                variant={planningMode === 'form' ? 'default' : 'outline'}
-                onClick={() => setPlanningMode('form')}
-                className="flex items-center gap-2"
-              >
-                <Calendar className="w-4 h-4" />
-                Form-Based Planning
-              </Button>
-              <Button
-                variant={planningMode === 'text' ? 'default' : 'outline'}
-                onClick={() => setPlanningMode('text')}
-                className="flex items-center gap-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                Text-Based Planning
-              </Button>
-            </div>
           </CardHeader>
           
           <CardContent className="space-y-6">
-            {planningMode === 'text' ? (
-              /* Text-Based Planning UI */
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 rounded-lg border-2 border-primary/20">
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    Describe Your Perfect Trip
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Tell us about your dream trip in your own words. For example:
-                  </p>
-                  <div className="bg-background/50 p-4 rounded-md mb-4 text-sm italic border border-border">
-                    "I want a 3-day adventure trip in Ranchi. First day I want to visit Hundru Falls in the morning, 
-                    then Rock Garden in the evening. Second day take me to Ranchi Lake and tribal museum. 
-                    Third day I want to explore local markets and try tribal cuisine. Budget is ₹15,000."
-                  </div>
-                  <Textarea
-                    placeholder="Describe your trip... (e.g., 'I want to visit waterfalls on day 1, then temples on day 2, followed by tribal villages...')"
-                    value={textPrompt}
-                    onChange={(e) => setTextPrompt(e.target.value)}
-                    className="min-h-[200px] text-base"
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    💡 Tip: Include duration, budget, places you want to visit, activities, and any special preferences
-                  </p>
-                </div>
-                
-                <Button
-                  onClick={() => generateItineraryFromText()}
-                  disabled={isGenerating || !textPrompt.trim()}
-                  className="w-full h-12 text-lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Creating Your Perfect Itinerary...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Generate My Trip Plan
-                    </>
-                  )}
-                </Button>
-              </div>
-            ) : (
-              /* Form-Based Planning UI */
-              <>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium mb-2 block">Trip Duration</label>
@@ -1204,92 +763,6 @@ Return response in this EXACT JSON format:
               </div>
             </div>
 
-            {/* District/Region Selection */}
-            <div>
-              <label className="text-sm font-medium mb-3 block">
-                <MapPin className="inline h-4 w-4 mr-2" />
-                Preferred Districts/Regions (Optional)
-              </label>
-              <p className="text-sm text-muted-foreground mb-3">
-                Select specific regions you want to explore, or leave blank for AI to suggest best locations based on your interests
-              </p>
-              
-              {/* Quick Circuit Options */}
-              <div className="mb-4">
-                <p className="text-sm font-medium mb-2">Popular Circuits:</p>
-                <div className="flex flex-wrap gap-2">
-                  {travelCircuits.map((circuit) => (
-                    <Badge
-                      key={circuit.name}
-                      variant={preferences.areaFocus === 'circuit' && preferences.targetAreas.length > 0 && 
-                        circuit.areas.every(area => preferences.targetAreas.includes(area)) ? "default" : "outline"}
-                      className="cursor-pointer hover:bg-primary/80 px-3 py-2"
-                      onClick={() => handleCircuitSelect(circuit)}
-                    >
-                      {circuit.name} ({circuit.duration})
-                    </Badge>
-                  ))}
-                  {preferences.targetAreas.length > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="cursor-pointer hover:bg-destructive/80 px-3 py-2"
-                      onClick={() => setPreferences(prev => ({ ...prev, targetAreas: [], areaFocus: 'multiple' }))}
-                    >
-                      Clear Selection ✕
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              {/* Individual Region Selection */}
-              <div>
-                <p className="text-sm font-medium mb-2">Or select individual regions:</p>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {jharkhandAreas.map((area) => (
-                    <div
-                      key={area.name}
-                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                        preferences.targetAreas.includes(area.name)
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => {
-                        handleAreaToggle(area.name);
-                        setPreferences(prev => ({ ...prev, areaFocus: 'multiple' }));
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium">{area.name}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Districts: {area.districts.join(', ')}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {area.bestFor.map((tag) => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        {preferences.targetAreas.includes(area.name) && (
-                          <span className="text-primary ml-2">✓</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {preferences.targetAreas.length === 0 && (
-                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    <span className="font-medium">💡 Tip:</span> No regions selected! Our AI will automatically suggest the best districts based on your interests, duration, and travel style.
-                  </p>
-                </div>
-              )}
-            </div>
-
             <div>
               <label className="text-sm font-medium mb-2 block">Special Requests</label>
               <Textarea
@@ -1307,8 +780,6 @@ Return response in this EXACT JSON format:
             >
               Next: Review Preferences
             </Button>
-              </>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -1376,61 +847,6 @@ Return response in this EXACT JSON format:
               </div>
             </div>
 
-            {preferences.targetAreas.length > 0 && (
-              <div>
-                <p className="font-medium mb-2 flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Target Regions:
-                </p>
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    {preferences.targetAreas.map((area) => {
-                      const areaData = jharkhandAreas.find(a => a.name === area);
-                      return (
-                        <Badge key={area} variant="default" className="text-sm px-3 py-1">
-                          {area}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                    <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium mb-2">
-                      📍 Your itinerary will include:
-                    </p>
-                    <ul className="text-sm text-emerald-600 dark:text-emerald-400 space-y-1">
-                      {preferences.targetAreas.map((area) => {
-                        const areaData = jharkhandAreas.find(a => a.name === area);
-                        if (!areaData) return null;
-                        return (
-                          <li key={area}>
-                            • <strong>{area}</strong>: {areaData.highlights.slice(0, 3).join(', ')}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {preferences.targetAreas.length === 0 && (
-              <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 mb-2">
-                  <Sparkles className="h-5 w-5" />
-                  <span>AI Smart Selection Mode Activated 🤖</span>
-                </p>
-                <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-2">
-                  Our AI will intelligently select the best regions for you based on:
-                </p>
-                <ul className="text-sm text-blue-600 dark:text-blue-400 space-y-1 ml-4">
-                  <li>✓ Your interests: <strong>{preferences.interests.join(', ') || 'All activities'}</strong></li>
-                  <li>✓ Trip duration: <strong>{preferences.duration} days</strong></li>
-                  <li>✓ Travel style: <strong>{preferences.travelStyle}</strong></li>
-                  <li>✓ Optimal travel routes to minimize transit time</li>
-                </ul>
-              </div>
-            )}
-
             {preferences.specialRequests && (
               <div>
                 <p className="font-medium mb-2">Special Requests:</p>
@@ -1478,15 +894,15 @@ Return response in this EXACT JSON format:
           {/* Header */}
           <Card className="shadow-lg">
             <CardHeader>
-              <div className="flex justify-between items-start flex-wrap gap-4">
-                <div className="flex-1">
+              <div className="flex justify-between items-start">
+                <div>
                   <CardTitle className="text-3xl font-bold text-primary mb-2">
                     {generatedItinerary.title}
                   </CardTitle>
                   <p className="text-lg text-muted-foreground mb-4">
                     {generatedItinerary.description}
                   </p>
-                  <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-4">
                     <Badge variant="outline" className="text-lg px-4 py-2">
                       Total Cost: {generatedItinerary.totalCost}
                     </Badge>
@@ -1495,25 +911,15 @@ Return response in this EXACT JSON format:
                     </Badge>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    onClick={handleBookEntireItinerary}
-                    className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold shadow-lg"
-                    size="lg"
-                  >
-                    <ShoppingBag className="h-5 w-5 mr-2" />
-                    Book Entire Trip
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={shareItinerary}>
+                    <Share className="h-4 w-4 mr-2" />
+                    Share
                   </Button>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={shareItinerary} size="sm">
-                      <Share className="h-4 w-4 mr-2" />
-                      Share
-                    </Button>
-                    <Button variant="outline" onClick={downloadItinerary} size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
+                  <Button onClick={downloadItinerary}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download PDF
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -1560,17 +966,6 @@ Return response in this EXACT JSON format:
                             <p className="text-sm mt-1">{activity.description}</p>
                             <p className="text-sm font-medium mt-2">Cost: {activity.cost}</p>
                             
-                            {/* Book Activity Button */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full mt-3 text-xs"
-                              onClick={() => handleBookDestination(activity.location, activity.activity)}
-                            >
-                              <Ticket className="h-3 w-3 mr-1" />
-                              Book Tickets / Visit
-                            </Button>
-                            
                             {/* Travel Info to Next Location */}
                             {activity.travelToNext && (
                               <div className="mt-3 pt-3 border-t border-border">
@@ -1582,15 +977,6 @@ Return response in this EXACT JSON format:
                                   <p><strong>Time:</strong> {activity.travelToNext.duration} • <strong>Distance:</strong> {activity.travelToNext.distance}</p>
                                   <p className="text-muted-foreground italic">{activity.travelToNext.route}</p>
                                   <p><strong>Cost:</strong> {activity.travelToNext.cost}</p>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    className="w-full mt-2 text-xs"
-                                    onClick={() => handleBookTransport(activity.location, day.activities[idx + 1]?.location || 'Next Location')}
-                                  >
-                                    <ExternalLink className="h-3 w-3 mr-1" />
-                                    Book Transport
-                                  </Button>
                                 </div>
                               </div>
                             )}
@@ -1624,15 +1010,6 @@ Return response in this EXACT JSON format:
                                 <p className="text-xs">{meal.specialties.join(', ')}</p>
                               </div>
                             )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full mt-3 text-xs"
-                              onClick={() => handleBookRestaurant(meal.restaurant, day.accommodation.location, meal.cuisine)}
-                            >
-                              <Utensils className="h-3 w-3 mr-1" />
-                              View Restaurant
-                            </Button>
                           </div>
                         ))}
                       </div>
@@ -1659,18 +1036,7 @@ Return response in this EXACT JSON format:
                             ))}
                           </div>
                         )}
-                        <p className="text-sm font-medium mb-3">Cost: {day.accommodation.cost}</p>
-                        
-                        {/* Book Accommodation Button */}
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
-                          onClick={() => handleBookAccommodation(day.accommodation.name, day.accommodation.location, day.accommodation.type)}
-                        >
-                          <Hotel className="h-3 w-3 mr-1" />
-                          Book Accommodation
-                        </Button>
+                        <p className="text-sm font-medium">Cost: {day.accommodation.cost}</p>
                       </div>
                       
                       {/* Day Summary */}
@@ -1693,17 +1059,6 @@ Return response in this EXACT JSON format:
                         <div className="p-3 bg-primary/10 rounded-md">
                           <p className="font-semibold text-primary">Day Total: {day.totalDayCost}</p>
                         </div>
-                        
-                        {/* Local Shopping Button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => handleBookMarketplace(day.accommodation.location)}
-                        >
-                          <ShoppingBag className="h-3 w-3 mr-1" />
-                          Shop Local Handicrafts
-                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1769,101 +1124,15 @@ Return response in this EXACT JSON format:
             </Card>
           </div>
 
-          {/* Booking Summary & CTA */}
-          <Card className="shadow-xl border-2 border-primary/20 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
-                <ShoppingBag className="h-6 w-6 text-primary" />
-                Ready to Make This Trip a Reality?
-              </CardTitle>
-              <p className="text-center text-muted-foreground">
-                Book everything you need for your perfect Jharkhand adventure
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Quick Booking Options */}
-              <div className="grid md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-white dark:bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <Hotel className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="font-semibold text-sm">Accommodations</p>
-                  <p className="text-xs text-muted-foreground">{generatedItinerary.days.length} Nights</p>
-                </div>
-                <div className="text-center p-4 bg-white dark:bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <Ticket className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="font-semibold text-sm">Attractions</p>
-                  <p className="text-xs text-muted-foreground">
-                    {generatedItinerary.days.reduce((acc, day) => acc + day.activities.length, 0)} Activities
-                  </p>
-                </div>
-                <div className="text-center p-4 bg-white dark:bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <Utensils className="h-8 w-8 mx-auto mb-2 text-orange-600" />
-                  <p className="font-semibold text-sm">Dining</p>
-                  <p className="text-xs text-muted-foreground">
-                    {generatedItinerary.days.reduce((acc, day) => acc + day.meals.length, 0)} Meals
-                  </p>
-                </div>
-                <div className="text-center p-4 bg-white dark:bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <ExternalLink className="h-8 w-8 mx-auto mb-2 text-emerald-600" />
-                  <p className="font-semibold text-sm">Transport</p>
-                  <p className="text-xs text-muted-foreground">All Routes</p>
-                </div>
-              </div>
-
-              {/* Main Booking CTAs */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  size="lg"
-                  onClick={handleBookEntireItinerary}
-                  className="flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-6 text-lg shadow-xl hover:shadow-2xl transition-all"
-                >
-                  <ShoppingBag className="h-5 w-5 mr-2" />
-                  Book Complete Package
-                  <Badge variant="secondary" className="ml-2 bg-white text-emerald-700">
-                    Save 15%
-                  </Badge>
-                </Button>
-                
-                <Button 
-                  size="lg"
-                  variant="outline"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="flex-1 sm:flex-initial py-6 text-lg"
-                >
-                  <ExternalLink className="h-5 w-5 mr-2" />
-                  Book Items Individually
-                </Button>
-              </div>
-
-              {/* Additional Info */}
-              <div className="grid md:grid-cols-3 gap-4 text-sm text-center pt-4 border-t">
-                <div>
-                  <p className="font-semibold text-primary">✓ Instant Confirmation</p>
-                  <p className="text-xs text-muted-foreground">Get booking confirmations immediately</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-primary">✓ Best Price Guarantee</p>
-                  <p className="text-xs text-muted-foreground">Lowest prices on all bookings</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-primary">✓ 24/7 Support</p>
-                  <p className="text-xs text-muted-foreground">Help available anytime</p>
-                </div>
-              </div>
-
-              {/* Secondary Actions */}
-              <div className="flex flex-wrap justify-center gap-3 pt-4">
-                <Button variant="ghost" size="sm" onClick={startNewTrip}>
-                  ← Plan New Trip
-                </Button>
-                <Button variant="ghost" size="sm" onClick={shareItinerary}>
-                  Share with Friends
-                </Button>
-                <Button variant="ghost" size="sm" onClick={downloadItinerary}>
-                  Download Itinerary
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Actions */}
+          <div className="flex justify-center gap-4">
+            <Button variant="outline" onClick={() => setStep(1)}>
+              Plan Another Trip
+            </Button>
+            <Button>
+              Book Selected Accommodations
+            </Button>
+          </div>
         </div>
       </div>
     );

@@ -42,11 +42,7 @@ const Hero = memo(() => {
             
             {/* Tagline */}
             <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <p className="text-base md:text-lg font-bold tracking-wide uppercase text-white" style={{
-                textShadow: '2px 2px 8px rgba(0, 0, 0, 0.9), 0px 0px 20px rgba(0, 0, 0, 0.8)',
-                filter: 'drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.7))',
-                letterSpacing: '0.05em'
-              }}>
+              <p className="text-emerald-300/80 text-base md:text-lg font-medium tracking-wide uppercase">
                 {t('hero.tagline')}
               </p>
             </div>
@@ -144,12 +140,12 @@ const Hero = memo(() => {
                 
                 {/* Authentic Stays Card */}
                 <Link to="/stays" className="group block relative z-30">
-                  <div className="text-center p-6 rounded-2xl bg-white/15 border border-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/50 hover:border-emerald-400/60 hover:bg-white/25 relative overflow-hidden z-30">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/30 to-green-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="text-center p-6 rounded-2xl bg-white/15 border border-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/50 hover:border-blue-400/60 hover:bg-white/25 relative overflow-hidden z-30">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="absolute inset-0 backdrop-blur-3xl"></div>
                     <div className="relative z-10">
                       <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300 filter drop-shadow-2xl">🏡</div>
-                      <h3 className="font-bold text-white text-xl mb-2 group-hover:text-emerald-100 transition-colors duration-300 tracking-wide drop-shadow-lg">
+                      <h3 className="font-bold text-white text-xl mb-2 group-hover:text-blue-100 transition-colors duration-300 tracking-wide drop-shadow-lg">
                         Authentic Stays
                       </h3>
                       <p className="text-white/95 group-hover:text-white transition-colors duration-300 text-base font-medium drop-shadow-md">
