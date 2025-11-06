@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -100,6 +100,36 @@ const AITripPlanner = () => {
 
   // Cache for API responses
   const itineraryCache = useMemo(() => new Map<string, GeneratedItinerary>(), []);
+
+  // Load saved itinerary on component mount
+  useEffect(() => {
+    const savedItinerary = localStorage.getItem('currentItinerary');
+    if (savedItinerary) {
+      try {
+        const parsed = JSON.parse(savedItinerary);
+        setGeneratedItinerary(parsed.itinerary);
+        setPreferences(parsed.preferences);
+        toast({
+          title: "Welcome Back! 👋",
+          description: "Your previous trip itinerary has been restored.",
+          duration: 4000,
+        });
+      } catch (error) {
+        console.error('Error loading saved itinerary:', error);
+      }
+    }
+  }, []);
+
+  // Save itinerary whenever it changes
+  useEffect(() => {
+    if (generatedItinerary) {
+      localStorage.setItem('currentItinerary', JSON.stringify({
+        itinerary: generatedItinerary,
+        preferences: preferences,
+        savedAt: new Date().toISOString()
+      }));
+    }
+  }, [generatedItinerary, preferences]);
 
   const interestOptions = [
     'Tribal Culture', 'Waterfalls', 'Wildlife', 'Temples', 'Handicrafts', 
@@ -665,6 +695,36 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
       document.body.removeChild(textArea);
       alert(`Shareable link copied!\n\n${text}`);
     });
+  };
+
+  const startNewTrip = () => {
+    // Clear saved itinerary from localStorage
+    localStorage.removeItem('currentItinerary');
+    
+    // Reset all state
+    setGeneratedItinerary(null);
+    setPreferences({
+      duration: '',
+      budget: '',
+      interests: [],
+      groupSize: '',
+      travelStyle: '',
+      accommodation: '',
+      specialRequests: '',
+      targetAreas: [],
+      areaFocus: 'multiple',
+      travelRadius: 'flexible'
+    });
+    setStep(1);
+    
+    toast({
+      title: "Fresh Start! ✨",
+      description: "Ready to plan your new Jharkhand adventure!",
+      duration: 3000,
+    });
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Booking Helper Functions
@@ -1526,8 +1586,8 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
 
               {/* Secondary Actions */}
               <div className="flex flex-wrap justify-center gap-3 pt-4">
-                <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
-                  ← Plan Different Trip
+                <Button variant="ghost" size="sm" onClick={startNewTrip}>
+                  ← Plan New Trip
                 </Button>
                 <Button variant="ghost" size="sm" onClick={shareItinerary}>
                   Share with Friends
