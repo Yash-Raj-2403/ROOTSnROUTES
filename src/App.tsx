@@ -8,7 +8,6 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import FloatingChatbot from './components/FloatingChatbot';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
-import OfflineIndicator from './components/OfflineIndicator';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -73,19 +72,9 @@ const RedirectHandler = () => {
 };
 
 const App = () => {
-  // Initialize PWA on app mount
   useEffect(() => {
-    initializePWA({
-      onInstallable: (canInstall) => {
-        console.log('📱 PWA installable:', canInstall);
-      },
-      onOnline: () => {
-        console.log('🌐 App is online');
-      },
-      onOffline: () => {
-        console.log('📴 App is offline');
-      }
-    });
+    // Initialize PWA
+    initializePWA();
   }, []);
 
   return (
@@ -103,7 +92,6 @@ const App = () => {
                 >
                   <ScrollToTop />
                   <RedirectHandler />
-                  <OfflineIndicator />
                   <div className="flex flex-col bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
                     <Suspense fallback={<Loading />}>
                       <Routes>

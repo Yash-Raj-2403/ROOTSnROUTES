@@ -177,12 +177,22 @@ const Transport = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto mb-8">
             <Input 
               type="text"
               placeholder="Search routes, services..."
               className="h-12 text-lg bg-card border-border"
             />
+          </div>
+
+          {/* Filter Tags */}
+          <div className="flex flex-wrap gap-2 mb-8 justify-center">
+            <Badge variant="secondary">All Transport Types</Badge>
+            <Badge variant="outline">All</Badge>
+            <Badge variant="outline">Bus</Badge>
+            <Badge variant="outline">Taxi</Badge>
+            <Badge variant="outline">Train</Badge>
+            <Badge variant="outline">Auto-rickshaw</Badge>
           </div>
         </div>
       </section>

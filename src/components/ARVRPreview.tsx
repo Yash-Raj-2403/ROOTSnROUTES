@@ -144,28 +144,35 @@ const ARVRPreview: React.FC<ARVRPreviewProps> = ({ destination }) => {
         {/* AR Preview */}
         {currentView === 'ar' && (
           <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950">
-            <div className="flex items-center justify-center h-64 md:h-80">
-              <div className="text-center">
+            <div className="flex items-center justify-center h-64 md:h-80 p-6">
+              <div className="text-center max-w-md">
                 <div className="w-20 h-20 mx-auto mb-4 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                  <RotateCw className="w-10 h-10 text-emerald-600 dark:text-emerald-400 animate-spin" />
+                  <Camera className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">AR Experience</h3>
-                <p className="text-muted-foreground mb-4 max-w-sm">
+                <p className="text-muted-foreground mb-4 text-sm">
                   View {destination.name} in augmented reality. 
                   Place 3D models in your real environment.
                 </p>
-                <div className="flex gap-2 justify-center">
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
                   <Button 
                     variant="default"
                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={() => window.location.href = '/ar-vr-preview'}
                   >
                     <Camera className="w-4 h-4 mr-2" />
-                    Open Camera
+                    Open AR Experience
                   </Button>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.location.href = '/ar-vr-preview'}
+                  >
                     View 3D Model
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  📱 Works best on mobile devices with camera access
+                </p>
               </div>
             </div>
             <div className="absolute top-4 right-4">
