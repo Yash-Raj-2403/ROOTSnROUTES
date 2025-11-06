@@ -178,18 +178,44 @@ Visit: https://rootsnroutes.com
           </p>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {(['all', 'upcoming', 'past', 'cancelled'] as const).map((f) => (
-            <Button
-              key={f}
-              variant={filter === f ? 'default' : 'outline'}
-              onClick={() => setFilter(f)}
-              className="capitalize"
+        {/* Filter Tabs and Actions */}
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {(['all', 'upcoming', 'past', 'cancelled'] as const).map((f) => (
+              <Button
+                key={f}
+                variant={filter === f ? 'default' : 'outline'}
+                onClick={() => setFilter(f)}
+                className="capitalize"
+              >
+                {f}
+              </Button>
+            ))}
+          </div>
+          
+          {bookings.some(b => b.status === 'confirmed' && new Date(b.date) >= new Date()) && (
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (confirm('Are you sure you want to cancel ALL upcoming bookings? This action cannot be undone.')) {
+                  const updatedBookings = bookings.map(b => 
+                    b.status === 'confirmed' && new Date(b.date) >= new Date()
+                      ? { ...b, status: 'cancelled' as const }
+                      : b
+                  );
+                  setBookings(updatedBookings);
+                  localStorage.setItem(`bookings_${user?.id}`, JSON.stringify(updatedBookings));
+                  
+                  const cancelledCount = updatedBookings.filter(b => b.status === 'cancelled').length - 
+                                        bookings.filter(b => b.status === 'cancelled').length;
+                  alert(`${cancelledCount} booking${cancelledCount !== 1 ? 's' : ''} cancelled successfully`);
+                }
+              }}
             >
-              {f}
+              <XCircle className="h-4 w-4 mr-2" />
+              Cancel All Upcoming
             </Button>
-          ))}
+          )}
         </div>
 
         {/* Loading State */}

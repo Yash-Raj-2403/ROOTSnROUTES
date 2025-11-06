@@ -367,7 +367,7 @@ const FloatingChatbot: React.FC = () => {
         <div className="fixed bottom-24 right-4 sm:bottom-28 sm:right-6 z-[10000]">
           <div className="animate-bounce">
             <div 
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-4 rounded-2xl shadow-2xl border-2 border-white/20 relative cursor-pointer hover:scale-105 hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+              className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-4 rounded-2xl shadow-2xl border-2 border-white/20 relative cursor-pointer hover:scale-105 hover:from-emerald-600 hover:to-green-700 transition-all duration-300"
               onClick={() => {
                 setIsOpen(true);
                 setShowNotification(false);
@@ -388,7 +388,7 @@ const FloatingChatbot: React.FC = () => {
               >
                 ×
               </button>
-              <div className="absolute -bottom-2 right-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-blue-500"></div>
+              <div className="absolute -bottom-2 right-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-emerald-500"></div>
             </div>
           </div>
         </div>
@@ -401,7 +401,7 @@ const FloatingChatbot: React.FC = () => {
         <Card className={`w-[380px] max-w-[calc(100vw-2rem)] shadow-none border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm transition-all duration-300 rounded-xl ${
           isMinimized ? 'h-14' : 'h-[500px] max-h-[calc(100vh-8rem)]'
         }`}>
-          <CardHeader className="p-3 border-b bg-gradient-to-r from-blue-500 to-purple-600 dark:from-emerald-600 dark:to-green-600 text-white rounded-t-xl shadow-lg chatbot-header">
+          <CardHeader className="p-3 border-b bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-t-xl shadow-lg chatbot-header">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                 <Bot className="w-5 h-5 animate-pulse" />
@@ -457,12 +457,12 @@ const FloatingChatbot: React.FC = () => {
                   >
                     <Avatar className={`w-8 h-8 flex-shrink-0 mt-1 ${
                       message.role === 'user' 
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 dark:from-emerald-500 dark:to-green-500 text-white' 
+                        ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white' 
                         : 'bg-gradient-to-r from-emerald-500 to-teal-600 dark:from-green-600 dark:to-emerald-600 text-white'
                     }`}>
                       <AvatarFallback className={`text-xs ${
                         message.role === 'user' 
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 dark:from-emerald-500 dark:to-green-500 text-white' 
+                          ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white' 
                           : 'bg-gradient-to-r from-emerald-500 to-teal-600 dark:from-green-600 dark:to-emerald-600 text-white'
                       }`}>
                         {message.role === 'user' ? (
@@ -476,13 +476,13 @@ const FloatingChatbot: React.FC = () => {
                     <div
                       className={`max-w-[75%] p-4 text-sm leading-relaxed whitespace-pre-wrap shadow-md transition-all duration-200 hover:shadow-lg ${
                         message.role === 'user'
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 dark:from-emerald-500 dark:to-green-500 text-white rounded-2xl rounded-br-md chatbot-user-message'
+                          ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-2xl rounded-br-md chatbot-user-message'
                           : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-100 border border-gray-300 dark:border-slate-600 rounded-2xl rounded-bl-md chatbot-bot-message'
                       }`}
                     >
                       <p className="break-words font-medium">{message.content}</p>
                       <p className={`text-xs mt-3 opacity-70 font-normal ${
-                        message.role === 'user' ? 'text-blue-100 dark:text-green-100' : 'text-gray-500 dark:text-gray-400'
+                        message.role === 'user' ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
                       }`}>
                         {message.timestamp.toLocaleTimeString()}
                       </p>
@@ -538,13 +538,13 @@ const FloatingChatbot: React.FC = () => {
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me about Jharkhand tourism..."
                   disabled={loading}
-                  className="flex-1 h-12 text-sm px-4 bg-gray-50 dark:bg-slate-700 border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-emerald-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100 chatbot-input"
+                  className="flex-1 h-12 text-sm px-4 bg-gray-50 dark:bg-slate-700 border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100 chatbot-input"
                 />
                 <Button
                   onClick={sendMessage}
                   disabled={loading || !input.trim()}
                   size="sm"
-                  className="h-12 w-12 p-0 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 dark:from-emerald-500 dark:to-green-500 dark:hover:from-emerald-600 dark:hover:to-green-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed chatbot-send-btn"
+                  className="h-12 w-12 p-0 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed chatbot-send-btn"
                 >
                   <Send className="w-5 h-5" />
                 </Button>

@@ -443,57 +443,6 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
               <a-light type="ambient" color="#404040" intensity="0.4" />
               <a-light type="directional" position="0 1 0" color="#ffffff" intensity="0.6" />
 
-              {/* Interactive Elements */}
-              <a-text 
-                position="0 4 -3" 
-                value={`Welcome to ${currentExperience.title}`}
-                color="#ffffff"
-                align="center"
-                geometry="primitive: plane; width: 6; height: 1"
-                material="color: rgba(0,0,0,0.7); opacity: 0.8"
-              />
-              
-              {/* Display the 3D Model */}
-              <a-entity
-                gltf-model="#model"
-                position="0 1 -5"
-                scale="0.5 0.5 0.5"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
-              />
-              
-              {/* Animated 3D Objects */}
-              <a-box 
-                position="-2 0.5 -3" 
-                rotation="0 45 0" 
-                color="#4CC3D9"
-                animation="property: rotation; to: 0 405 0; loop: true; dur: 10000"
-              />
-              
-              <a-cylinder 
-                position="2 0.75 -3" 
-                radius="0.5" 
-                height="1.5" 
-                color="#EF2D5E"
-                animation="property: position; to: 2 1.5 -3; dir: alternate; dur: 2000; loop: true"
-              />
-
-              <a-sphere 
-                position="0 1.25 -5" 
-                radius="1" 
-                color="#FFC65D"
-                animation="property: rotation; to: 360 0 0; loop: true; dur: 5000"
-              />
-
-              {/* Ground */}
-              <a-plane 
-                position="0 0 -4" 
-                rotation="-90 0 0" 
-                width="20" 
-                height="20" 
-                color="#7BC8A4" 
-                opacity="0.3"
-              />
-
               {/* Camera with controls */}
               <a-camera look-controls wasd-controls position="0 1.6 0" />
             </a-scene>

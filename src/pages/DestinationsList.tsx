@@ -79,7 +79,7 @@ const DestinationsList = () => {
         );
       })}
 
-      <div className="mt-8 bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg text-center">
+      <div className="mt-8 bg-gradient-to-r from-emerald-500 to-green-600 text-white p-6 rounded-lg text-center">
         <h2 className="text-2xl font-bold mb-4">🚀 HOW TO ACCESS THE NEW DESTINATIONS</h2>
         <div className="text-lg space-y-2">
           <p>1. Click on "New Places" in the navigation menu</p>

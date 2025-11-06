@@ -80,6 +80,9 @@ const PredictiveBookingSystem = () => {
   const [bookingHistory, setBookingHistory] = useState<string[]>([]);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<PredictiveRecommendation | null>(null);
+  const [checkInDate, setCheckInDate] = useState('');
+  const [checkOutDate, setCheckOutDate] = useState('');
+  const [numberOfGuests, setNumberOfGuests] = useState('2');
 
   // Mock ML prediction algorithm
   const generatePredictiveRecommendations = async (): Promise<PredictiveRecommendation[]> => {
@@ -276,16 +279,16 @@ const PredictiveBookingSystem = () => {
   }, [userProfile]);
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 90) return 'text-green-600 bg-green-100';
-    if (confidence >= 80) return 'text-blue-600 bg-blue-100';
+    if (confidence >= 90) return 'text-emerald-600 bg-emerald-100';
+    if (confidence >= 80) return 'text-teal-600 bg-teal-100';
     if (confidence >= 70) return 'text-yellow-600 bg-yellow-100';
     return 'text-gray-600 bg-gray-100';
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'rising': return <TrendingUp className="h-4 w-4 text-green-500" />;
-      case 'stable': return <Target className="h-4 w-4 text-blue-500" />;
+      case 'rising': return <TrendingUp className="h-4 w-4 text-emerald-500" />;
+      case 'stable': return <Target className="h-4 w-4 text-teal-500" />;
       case 'declining': return <TrendingUp className="h-4 w-4 text-red-500 rotate-180" />;
       default: return <Target className="h-4 w-4 text-gray-500" />;
     }
@@ -320,24 +323,44 @@ const PredictiveBookingSystem = () => {
 
   const confirmBooking = () => {
     if (selectedBooking && user) {
-      // Get booking details from modal
-      const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
-      const guestsSelect = document.querySelector('select') as HTMLSelectElement;
+      // Validate dates
+      if (!checkInDate || !checkOutDate) {
+        toast({
+          title: "Missing Information",
+          description: "Please select both check-in and check-out dates",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (new Date(checkOutDate) <= new Date(checkInDate)) {
+        toast({
+          title: "Invalid Dates",
+          description: "Check-out date must be after check-in date",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const nights = Math.ceil((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24));
       
       const newBooking = {
         id: `BK${Date.now()}`,
         type: selectedBooking.type,
         name: selectedBooking.name,
         location: selectedBooking.location,
-        date: dateInput?.value || new Date().toISOString().split('T')[0],
-        guests: parseInt(guestsSelect?.value || '2'),
+        date: checkInDate,
+        checkInDate: checkInDate,
+        checkOutDate: checkOutDate,
+        nights: nights,
+        guests: parseInt(numberOfGuests),
         price: selectedBooking.price,
         status: 'confirmed' as const,
         bookingDate: new Date().toISOString(),
         confirmationCode: `RR${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         image: selectedBooking.image,
         contactPhone: '+91-1234567890',
-        contactEmail: 'support@rootsnroutes.com'
+        contactEmail: 'rootsnroutesofficial@gmail.com'
       };
 
       // Save to localStorage
@@ -422,12 +445,12 @@ const PredictiveBookingSystem = () => {
                 <p className="text-sm text-muted-foreground">Prediction Accuracy</p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{analytics.totalPredictions}</div>
-                <p className="text-sm text-muted-foreground">Total Predictions</p>
+                <div className="text-3xl font-bold text-emerald-600">{analytics.totalPredictions}</div>
+                <div className="text-sm text-muted-foreground">AI Predictions Made</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">{recommendations.length}</div>
-                <p className="text-sm text-muted-foreground">Active Recommendations</p>
+                <div className="text-3xl font-bold text-green-600">{recommendations.length}</div>
+                <div className="text-sm text-muted-foreground">Recommendations</div>
               </div>
             </div>
           </CardContent>
@@ -459,7 +482,7 @@ const PredictiveBookingSystem = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-blue-500" />
+                <Calendar className="h-5 w-5 text-emerald-500" />
                 Seasonal Insights
               </CardTitle>
             </CardHeader>
@@ -467,7 +490,7 @@ const PredictiveBookingSystem = () => {
               <div className="space-y-2">
                 {analytics.seasonalInsights.map((insight, idx) => (
                   <p key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <span className="text-blue-500">•</span>
+                    <span className="text-emerald-500">•</span>
                     {insight}
                   </p>
                 ))}
@@ -592,7 +615,7 @@ const PredictiveBookingSystem = () => {
                             <span className="text-sm text-muted-foreground">({rec.reviews} reviews)</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4 text-blue-500" />
+                            <Users className="h-4 w-4 text-emerald-500" />
                             <span className="text-sm">{rec.similarUsers} similar users</span>
                           </div>
                         </div>
@@ -713,13 +736,48 @@ const PredictiveBookingSystem = () => {
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Select Date</label>
-                  <Input type="date" min={new Date().toISOString().split('T')[0]} />
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Check-In Date</label>
+                    <Input 
+                      type="date" 
+                      min={new Date().toISOString().split('T')[0]}
+                      value={checkInDate}
+                      onChange={(e) => {
+                        setCheckInDate(e.target.value);
+                        // Auto-set check-out to next day if not set
+                        if (!checkOutDate) {
+                          const nextDay = new Date(e.target.value);
+                          nextDay.setDate(nextDay.getDate() + 1);
+                          setCheckOutDate(nextDay.toISOString().split('T')[0]);
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Check-Out Date</label>
+                    <Input 
+                      type="date" 
+                      min={checkInDate || new Date().toISOString().split('T')[0]}
+                      value={checkOutDate}
+                      onChange={(e) => setCheckOutDate(e.target.value)}
+                      disabled={!checkInDate}
+                    />
+                  </div>
                 </div>
+                
+                {checkInDate && checkOutDate && (
+                  <div className="text-sm text-muted-foreground text-center p-2 bg-muted rounded">
+                    {(() => {
+                      const nights = Math.ceil((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24));
+                      return `${nights} night${nights !== 1 ? 's' : ''} stay`;
+                    })()}
+                  </div>
+                )}
+                
                 <div>
                   <label className="text-sm font-medium mb-2 block">Number of Guests</label>
-                  <Select defaultValue="2">
+                  <Select value={numberOfGuests} onValueChange={setNumberOfGuests}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -735,12 +793,25 @@ const PredictiveBookingSystem = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button variant="outline" className="flex-1" onClick={() => setShowBookingModal(false)}>
+                <Button 
+                  variant="outline" 
+                  className="flex-1" 
+                  onClick={() => {
+                    setShowBookingModal(false);
+                    setCheckInDate('');
+                    setCheckOutDate('');
+                    setNumberOfGuests('2');
+                  }}
+                >
                   Cancel
                 </Button>
-                <Button className="flex-1" onClick={confirmBooking}>
+                <Button 
+                  className="flex-1" 
+                  onClick={confirmBooking}
+                  disabled={!checkInDate || !checkOutDate}
+                >
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Proceed to Book
+                  {checkInDate && checkOutDate ? 'Proceed to Book' : 'Select Dates First'}
                 </Button>
               </div>
             </CardContent>
