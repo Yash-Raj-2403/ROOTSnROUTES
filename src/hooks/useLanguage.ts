@@ -5,6 +5,10 @@ import { translations } from '@/utils/translations';
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  
   // Translation function
   const t = (key: string): string => {
     const keys = key.split('.');

@@ -107,18 +107,36 @@ const AITripPlanner = () => {
     if (savedItinerary) {
       try {
         const parsed = JSON.parse(savedItinerary);
-        setGeneratedItinerary(parsed.itinerary);
-        setPreferences(parsed.preferences);
-        toast({
-          title: "Welcome Back! 👋",
-          description: "Your previous trip itinerary has been restored.",
-          duration: 4000,
-        });
+        if (parsed && parsed.itinerary && parsed.preferences) {
+          // Validate that targetAreas exist in jharkhandAreas
+          const validAreas = parsed.preferences.targetAreas?.filter((area: string) => 
+            jharkhandAreas.some(a => a.name === area)
+          ) || [];
+          
+          setGeneratedItinerary(parsed.itinerary);
+          setPreferences({
+            ...parsed.preferences,
+            targetAreas: validAreas
+          });
+          toast({
+            title: "Welcome Back! 👋",
+            description: "Your previous trip itinerary has been restored.",
+            duration: 4000,
+          });
+        }
       } catch (error) {
         console.error('Error loading saved itinerary:', error);
+        // Clear corrupted data
+        localStorage.removeItem('currentItinerary');
+        toast({
+          title: "Fresh Start",
+          description: "Starting with a clean slate - previous data was outdated.",
+          variant: "default",
+          duration: 3000,
+        });
       }
     }
-  }, []);
+  }, [toast]);
 
   // Save itinerary whenever it changes
   useEffect(() => {
@@ -249,6 +267,17 @@ const AITripPlanner = () => {
 
   // AI Trip Generation Function using Groq API with caching
   const generateItinerary = useCallback(async () => {
+    // Validate required fields
+    if (!preferences.duration || !preferences.budget || !preferences.groupSize) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields (duration, budget, and group size).",
+        variant: "destructive",
+        duration: 4000
+      });
+      return;
+    }
+    
     setIsGenerating(true);
     
     // Create cache key from preferences
