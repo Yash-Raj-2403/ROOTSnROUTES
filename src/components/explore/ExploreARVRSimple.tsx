@@ -53,38 +53,38 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
   const [selectedExperience, setSelectedExperience] = useState<string>('destination');
   const sceneRef = useRef<HTMLDivElement>(null);
 
-  // Jharkhand-specific AR/VR content with relevant panoramas and 3D models
+  // Sample AR/VR content with proper panorama URLs and better 3D models
   const experiences = {
     destination: {
-      title: '🏔️ Hundru Falls',
-      description: 'Experience the majestic waterfall in immersive VR with 360° nature views',
-      panoramaUrl: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=4096&h=2048&fit=crop&q=90', // Waterfall forest scene
-      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb', // Wildlife animal
-      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb', // Forest animal for nature
+      title: '🏔️ Betla National Park',
+      description: 'Experience the wildlife sanctuary in immersive VR with 360° forest views',
+      panoramaUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF-Binary/BrainStem.glb',
+      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb',
       category: 'Nature & Wildlife'
     },
     marketplace: {
-      title: '🎨 Dokra Handicrafts',
-      description: 'Explore traditional tribal brass artifacts in 3D with AR preview',
-      panoramaUrl: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=4096&h=2048&fit=crop&q=90', // Marketplace/bazaar
-      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Lantern/glTF-Binary/Lantern.glb', // Brass lantern (similar to Dokra)
-      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/MetalRoughSpheres/glTF-Binary/MetalRoughSpheres.glb', // Metallic craft object
+      title: '🎨 Dokra Art Gallery',
+      description: 'Explore traditional brass artifacts in 3D with virtual marketplace tour',
+      panoramaUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Lantern/glTF-Binary/Lantern.glb',
+      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
       category: 'Art & Crafts'
     },
     restaurant: {
-      title: '🍽️ Tribal Cuisine Experience',
-      description: 'Virtual tour of authentic Jharkhandi tribal cuisine and traditional dining',
-      panoramaUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=4096&h=2048&fit=crop&q=90', // Restaurant interior
-      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb', // Food/dining item
-      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb', // Traditional vessel
+      title: '🍽️ Traditional Kitchen',
+      description: 'Virtual tour of authentic Jharkhandi cuisine and dining experience',
+      panoramaUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb',
+      arModel: 'https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb',
       category: 'Food & Dining'
     },
     hotel: {
-      title: '🏨 Tribal Heritage Homestay',
-      description: 'Preview authentic tribal homestays in VR with 360° room and village tours',
-      panoramaUrl: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=4096&h=2048&fit=crop&q=90', // Cozy rustic room
-      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Chair/glTF-Binary/Chair.glb', // Furniture
-      arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Lantern/glTF-Binary/Lantern.glb', // Traditional lantern decor
+      title: '🏨 Heritage Stay',
+      description: 'Preview luxury accommodations in VR with 360° room tours',
+      panoramaUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=4096&h=2048&fit=crop&q=90',
+      modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Chair/glTF-Binary/Chair.glb',
+      arModel: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
       category: 'Accommodation'
     }
   };
@@ -93,49 +93,28 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
   useEffect(() => {
     const loadLibraries = async () => {
       try {
-        // Check if A-Frame is already loaded (from CDN or package)
-        if (typeof window !== 'undefined') {
-          if (!window.AFRAME) {
-            console.log('🔄 A-Frame not found, loading from CDN...');
-            
-            // Load A-Frame from CDN as fallback
-            const aframeScript = document.createElement('script');
-            aframeScript.src = 'https://aframe.io/releases/1.6.0/aframe.min.js';
-            aframeScript.async = false;
-            
-            aframeScript.onload = () => {
-              console.log('✅ A-Frame loaded from CDN successfully');
-              setAframeLoaded(true);
-            };
-            
-            aframeScript.onerror = async () => {
-              console.warn('⚠️ CDN failed, trying package import...');
-              try {
-                await import('aframe');
-                console.log('✅ A-Frame loaded from package');
-                setAframeLoaded(true);
-              } catch (error) {
-                console.error('❌ Failed to load A-Frame:', error);
-                setAframeLoaded(true); // Still show interface
-              }
-            };
-            
-            document.head.appendChild(aframeScript);
-          } else {
-            console.log('✅ A-Frame already loaded');
-            setAframeLoaded(true);
-          }
-          
-          // Model Viewer is already in index.html, just verify
-          if (!customElements.get('model-viewer')) {
-            console.log('✅ Model Viewer will load from index.html');
-          } else {
-            console.log('✅ Model Viewer already available');
-          }
+        if (typeof window !== 'undefined' && !window.AFRAME) {
+          // Load A-Frame core
+          await import('aframe');
+          console.log('✅ A-Frame loaded successfully');
+        } else if (window.AFRAME) {
+          console.log('✅ A-Frame already loaded');
         }
+        
+        // Load model-viewer for AR
+        if (!customElements.get('model-viewer')) {
+          const modelViewerScript = document.createElement('script');
+          modelViewerScript.type = 'module';
+          modelViewerScript.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js';
+          document.head.appendChild(modelViewerScript);
+          console.log('✅ Model Viewer script added');
+        }
+        
+        setAframeLoaded(true);
       } catch (error) {
         console.error('❌ Failed to load libraries:', error);
-        setAframeLoaded(true); // Still show interface
+        // Still set as loaded to show the interface
+        setAframeLoaded(true);
       }
     };
 
@@ -470,79 +449,49 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
                 value={`Welcome to ${currentExperience.title}`}
                 color="#ffffff"
                 align="center"
-                geometry="primitive: plane; width: 7; height: 1.2"
+                geometry="primitive: plane; width: 6; height: 1"
                 material="color: rgba(0,0,0,0.7); opacity: 0.8"
               />
               
-              {/* Description Panel */}
-              <a-text 
-                position="0 3 -3" 
-                value={currentExperience.description}
-                color="#e0e0e0"
-                align="center"
-                width="6"
-                wrap-count="40"
-              />
-              
-              {/* Display the 3D Model - Main Attraction */}
+              {/* Display the 3D Model */}
               <a-entity
                 gltf-model="#model"
-                position="0 1.5 -4"
-                scale="1 1 1"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear"
+                position="0 1 -5"
+                scale="0.5 0.5 0.5"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
               />
               
-              {/* Category-specific Information Panels */}
-              <a-text 
-                position="-3 2 -4" 
-                value={currentExperience.category}
-                color="#10B981"
-                align="center"
-                width="3"
+              {/* Animated 3D Objects */}
+              <a-box 
+                position="-2 0.5 -3" 
+                rotation="0 45 0" 
+                color="#4CC3D9"
+                animation="property: rotation; to: 0 405 0; loop: true; dur: 10000"
               />
               
-              {/* Interactive Info Points - Left */}
-              <a-sphere 
-                position="-3 1.5 -3" 
-                radius="0.3" 
-                color="#10B981"
-                animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true"
-              />
-              <a-text 
-                position="-3 1 -3" 
-                value="Tap to Learn More"
-                color="#ffffff"
-                align="center"
-                width="2"
-                scale="0.8 0.8 0.8"
-              />
-              
-              {/* Interactive Info Points - Right */}
-              <a-sphere 
-                position="3 1.5 -3" 
-                radius="0.3" 
-                color="#F59E0B"
-                animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true"
-              />
-              <a-text 
-                position="3 1 -3" 
-                value="360° View"
-                color="#ffffff"
-                align="center"
-                width="2"
-                scale="0.8 0.8 0.8"
+              <a-cylinder 
+                position="2 0.75 -3" 
+                radius="0.5" 
+                height="1.5" 
+                color="#EF2D5E"
+                animation="property: position; to: 2 1.5 -3; dir: alternate; dur: 2000; loop: true"
               />
 
-              {/* Ground with natural color based on category */}
+              <a-sphere 
+                position="0 1.25 -5" 
+                radius="1" 
+                color="#FFC65D"
+                animation="property: rotation; to: 360 0 0; loop: true; dur: 5000"
+              />
+
+              {/* Ground */}
               <a-plane 
                 position="0 0 -4" 
                 rotation="-90 0 0" 
                 width="20" 
                 height="20" 
-                color={selectedExperience === 'destination' ? '#7BC8A4' : 
-                       selectedExperience === 'marketplace' ? '#D4A574' : 
-                       selectedExperience === 'restaurant' ? '#8B7355' : '#9CA3AF'} 
-                opacity="0.4"
+                color="#7BC8A4" 
+                opacity="0.3"
               />
 
               {/* Camera with controls */}

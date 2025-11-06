@@ -22,15 +22,14 @@ export default defineConfig(() => ({
   },
   build: {
     rollupOptions: {
-      external: ['three-dev'],
+      external: ['three-dev', 'aframe', 'aframe-extras', 'aframe-core'],
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-components': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-tabs'],
           'groq-ai': ['groq-sdk'],
           'supabase': ['@supabase/supabase-js'],
-          'maps': ['leaflet', 'react-leaflet'],
-          'aframe-vendor': ['aframe', 'aframe-extras']
+          'maps': ['leaflet', 'react-leaflet']
         }
       }
     },
@@ -38,13 +37,12 @@ export default defineConfig(() => ({
     minify: 'terser' as const,
     terserOptions: {
       compress: {
-        drop_console: false,
+        drop_console: true,
         drop_debugger: true
       }
     }
   },
   optimizeDeps: {
-    exclude: ['three-dev'],
-    include: ['aframe', 'aframe-extras']
+    exclude: ['aframe', 'aframe-extras', 'aframe-core', 'three-dev']
   }
 }));

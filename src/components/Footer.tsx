@@ -154,7 +154,7 @@ const Footer = () => {
               </span>
             </h4>
             <div className="space-y-2">
-              <Link to="/destinations" className="block text-muted-foreground hover:text-primary transition-colors font-medium">
+              <Link to="/destinations" className="block text-muted-foreground hover:text-primary transition-colors">
                 Destinations
               </Link>
               <Link to="/marketplace" className="block text-muted-foreground hover:text-primary transition-colors">
@@ -177,10 +177,10 @@ const Footer = () => {
               </span>
             </h4>
             <div className="space-y-2">
-              <Link to="/explore-districts" className="block text-muted-foreground hover:text-primary transition-colors font-medium">
+              <Link to="/explore-districts" className="block text-muted-foreground hover:text-primary transition-colors">
                 Interactive Map
               </Link>
-              <Link to="/ar-vr-preview" className="block text-muted-foreground hover:text-primary transition-colors font-medium">
+              <Link to="/ar-vr-preview" className="block text-muted-foreground hover:text-primary transition-colors">
                 AR/VR Previews
               </Link>
               <Link to="/stays" className="block text-muted-foreground hover:text-primary transition-colors">
@@ -206,10 +206,10 @@ const Footer = () => {
               </span>
             </h4>
             <div className="space-y-2">
-              <Link to="/ai-trip-planner" className="block text-muted-foreground hover:text-primary transition-colors font-medium">
+              <Link to="/ai-trip-planner" className="block text-muted-foreground hover:text-primary transition-colors">
                 AI Trip Planner
               </Link>
-              <Link to="/chatbot" className="block text-muted-foreground hover:text-primary transition-colors font-medium">
+              <Link to="/chatbot" className="block text-muted-foreground hover:text-primary transition-colors">
                 Multilingual AI Chatbot
               </Link>
               <Link to="/smart-weather" className="block text-muted-foreground hover:text-primary transition-colors">
@@ -232,7 +232,7 @@ const Footer = () => {
               </span>
             </h4>
             <div className="space-y-2">
-              <Link to="/support" className="block text-muted-foreground hover:text-primary transition-colors font-medium">
+              <Link to="/support" className="block text-muted-foreground hover:text-primary transition-colors">
                 Help Center
               </Link>
               <CommunityChatLink className="block text-muted-foreground hover:text-primary transition-colors">
