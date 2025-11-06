@@ -89,36 +89,30 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
     }
   };
 
-  // Load A-Frame and Model Viewer dynamically
+  // Check if A-Frame and Model Viewer are loaded
   useEffect(() => {
-    const loadLibraries = async () => {
-      try {
-        if (typeof window !== 'undefined' && !window.AFRAME) {
-          // Load A-Frame core
-          await import('aframe');
+    const checkLibraries = () => {
+      if (typeof window !== 'undefined') {
+        if (window.AFRAME) {
           console.log('✅ A-Frame loaded successfully');
-        } else if (window.AFRAME) {
-          console.log('✅ A-Frame already loaded');
+          setAframeLoaded(true);
+        } else {
+          // A-Frame should load from CDN in index.html
+          // If not loaded after 3 seconds, still set as loaded to show interface
+          setTimeout(() => {
+            if (window.AFRAME) {
+              console.log('✅ A-Frame loaded (delayed)');
+            } else {
+              console.warn('⚠️ A-Frame not detected, but continuing anyway');
+            }
+            setAframeLoaded(true);
+          }, 3000);
         }
-        
-        // Load model-viewer for AR
-        if (!customElements.get('model-viewer')) {
-          const modelViewerScript = document.createElement('script');
-          modelViewerScript.type = 'module';
-          modelViewerScript.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js';
-          document.head.appendChild(modelViewerScript);
-          console.log('✅ Model Viewer script added');
-        }
-        
-        setAframeLoaded(true);
-      } catch (error) {
-        console.error('❌ Failed to load libraries:', error);
-        // Still set as loaded to show the interface
-        setAframeLoaded(true);
       }
     };
 
-    loadLibraries();
+    // Check immediately and after a short delay
+    checkLibraries();
     
     // Cleanup function when component unmounts
     return () => {
