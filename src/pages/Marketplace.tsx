@@ -12,6 +12,90 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { handicrafts, generateItemId } from "@/data/marketplaceData";
 import dokraElephant from "@/assets/dokra-elephant.jpg";
 
+// Function to generate category-based icon images
+const getCategoryIcon = (category: string, name: string): string => {
+  // Define icon mappings based on category and keywords
+  const iconMap: { [key: string]: string } = {
+    'metal-art': '🐘',
+    'folk-art': '🎨',
+    'basketry': '🧺',
+    'textiles': '🧵',
+    'pottery': '🏺',
+    'tribal-art': '🦌',
+    'woodwork': '🪵',
+    'jewelry': '💎',
+    'stone-craft': '⛰️',
+    'bamboo-craft': '🎋',
+    'terracotta': '🏺',
+    'painting': '🖼️',
+    'weaving': '🧶',
+    'embroidery': '✨',
+    'leather-work': '👜',
+    'bell-metal': '🔔',
+    'dokra': '🐘',
+    'madhubani': '🌸',
+    'warli': '🎭',
+    'tribal-crafts': '🦌',
+    'traditional-crafts': '🎨',
+    'local-crafts': '🏺',
+    'chowk-crafts': '🎪',
+    'local-market': '🛍️',
+    'diverse-crafts': '🎨',
+    'commercial-crafts': '💼',
+    'warehouse-crafts': '📦',
+    'weekly-haat': '🏪',
+    'others': '🎁'
+  };
+
+  // Check for specific keywords in name
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes('elephant')) return '🐘';
+  if (lowerName.includes('deer') || lowerName.includes('animal')) return '🦌';
+  if (lowerName.includes('mountain') || lowerName.includes('hill')) return '⛰️';
+  if (lowerName.includes('water') || lowerName.includes('river')) return '💧';
+  if (lowerName.includes('bamboo')) return '🎋';
+  if (lowerName.includes('basket')) return '🧺';
+  if (lowerName.includes('pottery') || lowerName.includes('clay')) return '🏺';
+  if (lowerName.includes('textile') || lowerName.includes('fabric')) return '🧵';
+  if (lowerName.includes('painting') || lowerName.includes('art')) return '🎨';
+  if (lowerName.includes('jewelry') || lowerName.includes('ornament')) return '💎';
+  if (lowerName.includes('wood')) return '🪵';
+  if (lowerName.includes('stone')) return '⛰️';
+  if (lowerName.includes('metal')) return '🔧';
+  if (lowerName.includes('tribal')) return '🦌';
+  if (lowerName.includes('flower') || lowerName.includes('floral')) return '🌸';
+  if (lowerName.includes('bird')) return '🦅';
+  if (lowerName.includes('fish')) return '🐟';
+  if (lowerName.includes('tree')) return '🌳';
+  if (lowerName.includes('leaf')) return '🍃';
+  if (lowerName.includes('sun')) return '☀️';
+  if (lowerName.includes('moon')) return '🌙';
+  if (lowerName.includes('star')) return '⭐';
+
+  // Return category icon or default
+  return iconMap[category] || '🎁';
+};
+
+// Function to generate a beautiful gradient background for icons
+const generateIconBackground = (icon: string, index: number): string => {
+  const gradients = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+    'linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%)',
+    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+    'linear-gradient(135deg, #f77062 0%, #fe5196 100%)',
+  ];
+  
+  return gradients[index % gradients.length];
+};
+
 const Marketplace = () => {
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -2072,22 +2156,37 @@ const Marketplace = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredHandicrafts.map((craft, index) => {
               const craftId = generateItemId(craft.name);
+              const categoryIcon = getCategoryIcon(craft.category, craft.name);
+              const iconBackground = generateIconBackground(categoryIcon, index);
+              
               return (
                 <Link key={index} to={`/marketplace/${craftId}`} className="block">
                   <Card className="overflow-hidden bg-card border-border hover:shadow-card transition-all duration-300 group">
-                    <div className="relative h-64 overflow-hidden">
-                      <img
-                      src={craft.image}
-                      alt={`${craft.name} by ${craft.artist} - Traditional handicraft with ${craft.rating} star rating`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        loading="lazy"
-                      />
+                    <div 
+                      className="relative h-64 overflow-hidden flex items-center justify-center"
+                      style={{ background: iconBackground }}
+                    >
+                      {/* Large centered icon */}
+                      <div className="text-9xl transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
+                        {categoryIcon}
+                      </div>
+                      
+                      {/* Rating badge */}
                       <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
                         <span className="text-white text-sm font-medium">{craft.rating}</span>
                       </div>
+                      
+                      {/* Favorite button */}
                       <div className="absolute top-4 left-4">
                         <Heart className="w-6 h-6 text-white hover:text-red-400 cursor-pointer transition-colors" />
+                      </div>
+                      
+                      {/* Category badge */}
+                      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
+                        <span className="text-xs font-semibold text-gray-800 capitalize">
+                          {craft.category.replace('-', ' ')}
+                        </span>
                       </div>
                     </div>
 
