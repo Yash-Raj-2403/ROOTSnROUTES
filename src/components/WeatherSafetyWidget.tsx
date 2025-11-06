@@ -77,7 +77,7 @@ const WeatherSafetyWidget: React.FC<WeatherSafetyWidgetProps> = ({
   const getSafetyColor = (level: string) => {
     switch (level) {
       case 'excellent': return 'bg-green-500';
-      case 'good': return 'bg-blue-500';
+      case 'good': return 'bg-teal-500';
       case 'moderate': return 'bg-yellow-500';
       case 'poor': return 'bg-orange-500';
       case 'dangerous': return 'bg-red-500';
@@ -259,9 +259,9 @@ const WeatherSafetyWidget: React.FC<WeatherSafetyWidgetProps> = ({
         )}
 
         {/* Best Time to Visit */}
-        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm font-medium text-blue-800">Best Time to Visit:</p>
-          <p className="text-sm text-blue-700">{safety.bestTimeToVisit}</p>
+        <div className="p-3 bg-teal-50 rounded-lg border border-teal-200">
+          <p className="text-sm font-medium text-teal-800">Best Time to Visit:</p>
+          <p className="text-sm text-teal-700">{safety.bestTimeToVisit}</p>
         </div>
 
         {/* Recommended Activities */}

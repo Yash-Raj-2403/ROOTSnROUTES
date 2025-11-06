@@ -328,7 +328,7 @@ const MultilingualChatbot: React.FC = () => {
                       <Avatar className="w-10 h-10 flex-shrink-0">
                         <AvatarFallback className={`text-sm font-semibold ${
                           message.role === 'user' 
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
+                            ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white' 
                             : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
                         }`}>
                           {message.role === 'user' ? (
@@ -343,7 +343,7 @@ const MultilingualChatbot: React.FC = () => {
                         <div
                           className={`p-4 rounded-2xl text-sm leading-relaxed shadow-lg ${
                             message.role === 'user'
-                              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-md'
+                              ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-br-md'
                               : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
                           }`}
                         >

@@ -140,12 +140,12 @@ const Hero = memo(() => {
                 
                 {/* Authentic Stays Card */}
                 <Link to="/stays" className="group block relative z-30">
-                  <div className="text-center p-6 rounded-2xl bg-white/15 border border-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/50 hover:border-blue-400/60 hover:bg-white/25 relative overflow-hidden z-30">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="text-center p-6 rounded-2xl bg-white/15 border border-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/50 hover:border-emerald-400/60 hover:bg-white/25 relative overflow-hidden z-30">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/30 to-green-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="absolute inset-0 backdrop-blur-3xl"></div>
                     <div className="relative z-10">
                       <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300 filter drop-shadow-2xl">🏡</div>
-                      <h3 className="font-bold text-white text-xl mb-2 group-hover:text-blue-100 transition-colors duration-300 tracking-wide drop-shadow-lg">
+                      <h3 className="font-bold text-white text-xl mb-2 group-hover:text-emerald-100 transition-colors duration-300 tracking-wide drop-shadow-lg">
                         Authentic Stays
                       </h3>
                       <p className="text-white/95 group-hover:text-white transition-colors duration-300 text-base font-medium drop-shadow-md">

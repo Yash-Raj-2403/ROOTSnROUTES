@@ -537,7 +537,7 @@ const SmartWeatherRecommendations = () => {
   const getSuitabilityColor = (suitability: string) => {
     switch (suitability) {
       case 'excellent': return 'text-green-600 bg-green-100';
-      case 'good': return 'text-blue-600 bg-blue-100';
+      case 'good': return 'text-teal-600 bg-teal-100';
       case 'fair': return 'text-yellow-600 bg-yellow-100';
       case 'poor': return 'text-orange-600 bg-orange-100';
       case 'dangerous': return 'text-red-600 bg-red-100';
@@ -638,12 +638,12 @@ const SmartWeatherRecommendations = () => {
               <p className="text-sm text-muted-foreground">Temperature</p>
             </div>
             <div className="text-center">
-              <Cloud className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+              <Cloud className="h-6 w-6 mx-auto mb-2 text-teal-500" />
               <p className="font-semibold">{weatherData.condition}</p>
               <p className="text-sm text-muted-foreground">Condition</p>
             </div>
             <div className="text-center">
-              <Droplets className="h-6 w-6 mx-auto mb-2 text-blue-400" />
+              <Droplets className="h-6 w-6 mx-auto mb-2 text-teal-400" />
               <p className="font-semibold">{weatherData.humidity}%</p>
               <p className="text-sm text-muted-foreground">Humidity</p>
             </div>
@@ -653,7 +653,7 @@ const SmartWeatherRecommendations = () => {
               <p className="text-sm text-muted-foreground">Wind Speed</p>
             </div>
             <div className="text-center">
-              <Eye className="h-6 w-6 mx-auto mb-2 text-purple-500" />
+              <Eye className="h-6 w-6 mx-auto mb-2 text-emerald-500" />
               <p className="font-semibold">{weatherData.visibility} km</p>
               <p className="text-sm text-muted-foreground">Visibility</p>
             </div>

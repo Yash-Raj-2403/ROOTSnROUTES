@@ -1292,10 +1292,20 @@ const AuthenticStays = () => {
               Experience genuine hospitality in eco-friendly homestays, tribal villages, and sustainable lodges
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="hero" size="lg" className="bg-white text-primary hover:bg-white/90">
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="bg-white text-primary hover:bg-white/90"
+                onClick={() => {
+                  const staysSection = document.querySelector('#stays-section');
+                  if (staysSection) {
+                    staysSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+              >
                 Find Your Perfect Stay
               </Button>
-              <Link to="/marketplace">
+              <Link to="/feedback">
                 <Button variant="hero-outline" size="lg" className="border-white text-white hover:bg-white/10">
                   Browse Experiences
                 </Button>
@@ -1306,7 +1316,7 @@ const AuthenticStays = () => {
       </section>
 
       {/* Advanced Filtering Section */}
-      <section className="py-8 bg-black border-b border-gray-800">
+      <section id="stays-section" className="py-8 bg-black border-b border-gray-800">
         <div className="container mx-auto px-6">
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">

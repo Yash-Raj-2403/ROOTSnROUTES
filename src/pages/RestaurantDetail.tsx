@@ -193,7 +193,7 @@ const RestaurantDetail = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-blue-600" />
+                    <Clock className="w-4 h-4 text-emerald-600" />
                     <div>
                       <p className="font-semibold">Hours</p>
                       <p className="text-sm text-muted-foreground">{restaurant.timings}</p>
@@ -208,8 +208,8 @@ const RestaurantDetail = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-                      <MapPin className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-emerald-600" />
                     </div>
                     <div>
                       <h4 className="font-semibold">Location</h4>
@@ -221,7 +221,7 @@ const RestaurantDetail = () => {
                       href={generateGoogleMapsUrl(formatLocationString(restaurant.name, restaurant.district))}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      className="flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                     >
                       View on Map
                       <ExternalLink className="w-3 h-3" />

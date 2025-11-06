@@ -290,7 +290,7 @@ const Footer = () => {
                 className="p-3 bg-card hover:bg-primary/10 rounded-full transition-all duration-300 group shadow-sm hover:shadow-md"
                 aria-label="Follow us on Facebook"
               >
-                <Facebook className="w-5 h-5 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+                <Facebook className="w-5 h-5 text-muted-foreground group-hover:text-emerald-600 transition-colors" />
               </a>
               <a 
                 href="https://www.youtube.com/@rootsnroutes" 
