@@ -41,23 +41,29 @@ declare global {
 
 interface ExploreARVRSimpleProps {
   category?: 'destinations' | 'marketplace' | 'restaurants' | 'hotels' | 'all';
+  destinationName?: string; // Specific destination to show
   onBack?: () => void; // Optional callback to navigate back
 }
 
-const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all', onBack }) => {
+const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all', destinationName, onBack }) => {
   const [isVRActive, setIsVRActive] = useState(false);
   const [isARActive, setIsARActive] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [aframeLoaded, setAframeLoaded] = useState(false);
   const [vrReady, setVrReady] = useState(false);
-  const [selectedExperience, setSelectedExperience] = useState<string>('destination');
+  // Set initial experience based on destination name or default to 'destination'
+  const [selectedExperience, setSelectedExperience] = useState<string>(
+    destinationName ? 'destination' : 'destination'
+  );
   const sceneRef = useRef<HTMLDivElement>(null);
 
   // Sample AR/VR content with proper panorama URLs and better 3D models
   const experiences = {
     destination: {
-      title: '🏔️ Betla National Park',
-      description: 'Experience the wildlife sanctuary in immersive VR with 360° forest views',
+      title: destinationName ? `🏔️ ${destinationName}` : '🏔️ Betla National Park',
+      description: destinationName 
+        ? `Experience ${destinationName} in immersive VR with 360° views` 
+        : 'Experience the wildlife sanctuary in immersive VR with 360° forest views',
       panoramaUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=4096&h=2048&fit=crop&q=90',
       modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF-Binary/BrainStem.glb',
       arModel: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb',

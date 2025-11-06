@@ -38,6 +38,7 @@ const ExploreDistricts = lazy(() => import('./pages/ExploreDistricts'));
 const Support = lazy(() => import('./pages/Support'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Favorites = lazy(() => import('./pages/Favorites'));
+const MyBookings = lazy(() => import('./pages/MyBookings'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const FeedbackAnalysis = lazy(() => import('./pages/FeedbackAnalysis'));
 const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
@@ -142,6 +143,7 @@ const App = () => {
                         <Route path="/profile" element={<UserProfile />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/favorites" element={<Favorites />} />
+                        <Route path="/my-bookings" element={<MyBookings />} />
                         <Route path="/google-auth-test" element={<GoogleAuthTestPage />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>

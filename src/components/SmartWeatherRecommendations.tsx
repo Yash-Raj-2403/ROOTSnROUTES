@@ -208,7 +208,7 @@ const SmartWeatherRecommendations = () => {
     // Waterfall Activities
     if (weather.temperature >= 20 && weather.temperature <= 30 && weather.condition !== 'Heavy Rain') {
       activities.push({
-        activity: `${weather.location} Waterfall Experience`,
+        activity: 'Waterfall Experience',
         suitability: weather.precipitation > 0 ? 'excellent' : 'good',
         reason: weather.precipitation > 0 ? 'Recent rains make waterfalls spectacular!' : 'Perfect weather for waterfall trekking',
         tips: [
@@ -229,7 +229,7 @@ const SmartWeatherRecommendations = () => {
     // Wildlife Safari
     if (weather.temperature >= 15 && weather.temperature <= 32 && weather.condition !== 'Heavy Rain') {
       activities.push({
-        activity: `${weather.location} Wildlife Safari`,
+        activity: 'Wildlife Safari',
         suitability: weather.temperature <= 28 ? 'excellent' : 'good',
         reason: `${weather.temperature}°C is ideal for wildlife spotting. Animals are more active in this weather.`,
         tips: [
@@ -251,7 +251,7 @@ const SmartWeatherRecommendations = () => {
     // Hill Station Visit
     if (weather.temperature >= 12 && weather.temperature <= 28) {
       activities.push({
-        activity: `${weather.location} Hill Exploration`,
+        activity: 'Hill Exploration',
         suitability: weather.temperature <= 25 ? 'excellent' : 'good',
         reason: `Perfect ${weather.temperature}°C weather for hill exploration and scenic viewing.`,
         tips: [
@@ -273,7 +273,7 @@ const SmartWeatherRecommendations = () => {
     // Photography Activities
     if (weather.visibility >= 8 && weather.condition !== 'Heavy Rain') {
       activities.push({
-        activity: `${weather.location} Photography Tour`,
+        activity: 'Photography Tour',
         suitability: weather.condition === 'Partly Cloudy' ? 'excellent' : 'good',
         reason: `${weather.visibility}km visibility and ${weather.condition} conditions are perfect for photography.`,
         tips: [
@@ -295,7 +295,7 @@ const SmartWeatherRecommendations = () => {
     // Cultural Activities (Indoor/Outdoor based on weather)
     if (weather.temperature >= 18) {
       activities.push({
-        activity: `${weather.location} Cultural Experience`,
+        activity: 'Cultural Experience',
         suitability: weather.precipitation <= 5 ? 'good' : 'fair',
         reason: weather.precipitation > 5 ? 'Light rain may affect outdoor cultural programs' : 'Good weather for cultural visits and experiences',
         tips: [

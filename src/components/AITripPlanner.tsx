@@ -79,6 +79,12 @@ interface GeneratedItinerary {
 const AITripPlanner = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const [plannerMode, setPlannerMode] = useState<'simple' | 'detailed'>('simple'); // New: Toggle between modes
+  const [simpleTextInput, setSimpleTextInput] = useState(''); // New: For simple text-based planning
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]); // New: Selected districts
+  const [travelOrder, setTravelOrder] = useState<'flexible' | 'specific' | 'circular'>('flexible'); // New: Travel pattern
+  const [startingPoint, setStartingPoint] = useState(''); // New: Starting district
+  
   const [preferences, setPreferences] = useState<TripPreferences>({
     duration: '',
     budget: '',
@@ -439,6 +445,156 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
     }
   }, [preferences, itineraryCache]);
 
+  // AI Trip Generation from Simple Text Input
+  const generateFromSimpleText = useCallback(async () => {
+    if (!simpleTextInput.trim()) {
+      toast({
+        title: "Input Required",
+        description: "Please describe your trip requirements",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      
+      if (!apiKey || apiKey === 'your_groq_api_key_here' || apiKey.trim() === '') {
+        toast({
+          title: "Configuration Required",
+          description: "Groq API key is not configured. Please add VITE_GROQ_API_KEY to your .env file.",
+          variant: "destructive",
+          duration: 8000
+        });
+        setIsGenerating(false);
+        return;
+      }
+      
+      const groq = new Groq({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true
+      });
+
+      const prompt = `You are an expert travel planner for Jharkhand tourism. A user has described their trip requirements as follows:
+
+"${simpleTextInput}"
+
+Based on this description, create a detailed, realistic itinerary for Jharkhand. Extract trip duration, budget level, interests, and other details from their text. If any details are missing, make reasonable assumptions.
+
+**CRITICAL REQUIREMENTS:**
+1. Plan activities in SEQUENTIAL ORDER with realistic timing
+2. Include travel directions between locations (e.g., "20 min drive via NH33")
+3. Account for breakfast, lunch, dinner, and accommodation
+4. Use real places in Jharkhand: Hundru Falls, Dassam Falls, Tagore Hill, Betla National Park, Netarhat, etc.
+5. Calculate costs realistically
+
+**Format your response as valid JSON matching this structure:**
+{
+  "title": "Captivating trip title",
+  "description": "2-3 sentence description",
+  "totalCost": "₹XX,XXX",
+  "days": [
+    {
+      "day": 1,
+      "title": "Day 1 title",
+      "activities": [
+        {
+          "time": "08:30 AM",
+          "activity": "Activity name",
+          "location": "Location name",
+          "description": "Activity details",
+          "duration": "2 hours",
+          "cost": "₹XXX",
+          "type": "Sightseeing/Adventure/Cultural/etc",
+          "travelToNext": {
+            "mode": "Car/Bus/Walk",
+            "duration": "30 min",
+            "distance": "15 km",
+            "route": "Via NH33",
+            "cost": "₹50"
+          }
+        }
+      ],
+      "meals": [
+        {
+          "time": "01:00 PM",
+          "type": "Lunch",
+          "restaurant": "Restaurant name",
+          "cuisine": "Local/Multi-cuisine",
+          "specialties": ["Dish 1", "Dish 2"],
+          "cost": "₹XXX"
+        }
+      ],
+      "accommodation": {
+        "name": "Hotel/Homestay name",
+        "type": "Hotel/Homestay/Resort",
+        "location": "Location",
+        "checkIn": "03:00 PM",
+        "checkOut": "11:00 AM",
+        "amenities": ["WiFi", "Parking"],
+        "cost": "₹XXX"
+      },
+      "totalDayCost": "₹X,XXX"
+    }
+  ],
+  "recommendations": ["Tip 1", "Tip 2", "Tip 3"],
+  "weatherTips": ["Weather tip 1", "Weather tip 2"],
+  "culturalTips": ["Cultural tip 1", "Cultural tip 2"]
+}
+
+IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
+
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a Jharkhand tourism expert. Always respond with valid JSON only.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.7,
+        max_tokens: 8000,
+        response_format: { type: 'json_object' }
+      });
+
+      const responseContent = chatCompletion.choices[0]?.message?.content || '';
+      const aiItinerary = JSON.parse(responseContent);
+      
+      setGeneratedItinerary(aiItinerary as GeneratedItinerary);
+      setStep(3);
+      
+    } catch (error) {
+      console.error('Error generating itinerary:', error);
+      
+      let errorMessage = 'Failed to generate itinerary. ';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          errorMessage += 'Groq API key is not configured.';
+        } else if (error.message.includes('network')) {
+          errorMessage += 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage += error.message;
+        }
+      }
+      
+      toast({
+        title: "AI Generation Failed",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 6000
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [simpleTextInput]);
+
   const generateAreaBasedDays = (): ItineraryDay[] => {
     const days = parseInt(preferences.duration) || 3;
     const mockDays: ItineraryDay[] = [];
@@ -658,6 +814,91 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {/* Mode Selection */}
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-6 rounded-lg border-2 border-emerald-200 dark:border-emerald-800">
+              <h3 className="text-lg font-semibold mb-4 text-center">Choose Your Planning Style</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => setPlannerMode('simple')}
+                  className={`p-6 rounded-lg border-2 transition-all ${
+                    plannerMode === 'simple'
+                      ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 shadow-lg scale-105'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-700'
+                  }`}
+                >
+                  <div className="text-4xl mb-3">✍️</div>
+                  <h4 className="font-bold text-lg mb-2">Quick Text Input</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Just describe your trip in your own words. Our AI will understand and plan everything for you.
+                  </p>
+                  <div className="mt-3 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    Example: "3 day trip with family, budget friendly, want to see waterfalls"
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setPlannerMode('detailed')}
+                  className={`p-6 rounded-lg border-2 transition-all ${
+                    plannerMode === 'detailed'
+                      ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 shadow-lg scale-105'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-700'
+                  }`}
+                >
+                  <div className="text-4xl mb-3">📋</div>
+                  <h4 className="font-bold text-lg mb-2">Detailed Form</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Fill out a comprehensive form with specific options for duration, budget, interests, and more.
+                  </p>
+                  <div className="mt-3 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    More control over every aspect of your trip
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Simple Text Input Mode */}
+            {plannerMode === 'simple' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Describe Your Perfect Jharkhand Trip
+                  </label>
+                  <Textarea
+                    placeholder="Example: I want to visit Jharkhand for 4 days with my family. We're interested in nature, waterfalls, and wildlife. Our budget is around ₹20,000 total. We'd like comfortable but not luxury accommodation. We want to visit Ranchi, Hundru Falls, and maybe Betla National Park..."
+                    value={simpleTextInput}
+                    onChange={(e) => setSimpleTextInput(e.target.value)}
+                    rows={8}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    💡 Tip: Include details like duration, budget, interests, places you want to visit, group size, and any special requirements
+                  </p>
+                </div>
+
+                <Button 
+                  onClick={generateFromSimpleText}
+                  className="w-full py-6 text-lg"
+                  disabled={isGenerating || !simpleTextInput.trim()}
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      AI is planning your perfect trip...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5" />
+                      Generate My Trip Itinerary
+                    </span>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {/* Detailed Form Mode */}
+            {plannerMode === 'detailed' && (
+              <>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium mb-2 block">Trip Duration</label>
@@ -773,6 +1014,113 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
               />
             </div>
 
+            {/* District Selection */}
+            <div className="space-y-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-lg">Select Districts to Visit</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar', 'Hazaribagh', 'Giridih', 'Dumka', 'Palamu', 'Ramgarh', 'Netarhat', 'Khunti'].map((district) => (
+                  <Badge
+                    key={district}
+                    variant={selectedDistricts.includes(district) ? "default" : "outline"}
+                    className="cursor-pointer hover:bg-primary/80 px-3 py-2 text-center justify-center"
+                    onClick={() => {
+                      if (selectedDistricts.includes(district)) {
+                        setSelectedDistricts(selectedDistricts.filter(d => d !== district));
+                      } else {
+                        setSelectedDistricts([...selectedDistricts, district]);
+                      }
+                    }}
+                  >
+                    {district}
+                  </Badge>
+                ))}
+              </div>
+
+              {selectedDistricts.length > 0 && (
+                <div className="text-sm text-muted-foreground mt-2">
+                  ✓ {selectedDistricts.length} district{selectedDistricts.length > 1 ? 's' : ''} selected: {selectedDistricts.join(', ')}
+                </div>
+              )}
+            </div>
+
+            {/* Travel Order Preference */}
+            {selectedDistricts.length > 1 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <label className="text-sm font-medium">Travel Pattern</label>
+                </div>
+                
+                <div className="grid md:grid-cols-3 gap-3">
+                  <button
+                    onClick={() => setTravelOrder('flexible')}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      travelOrder === 'flexible'
+                        ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">🗺️</div>
+                    <div className="font-semibold mb-1">Flexible Route</div>
+                    <div className="text-xs text-muted-foreground">
+                      AI will optimize the best route based on your preferences
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setTravelOrder('specific')}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      travelOrder === 'specific'
+                        ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">📍</div>
+                    <div className="font-semibold mb-1">Specific Order</div>
+                    <div className="text-xs text-muted-foreground">
+                      Visit districts in the order you selected them
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setTravelOrder('circular')}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      travelOrder === 'circular'
+                        ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">🔄</div>
+                    <div className="font-semibold mb-1">Circular Tour</div>
+                    <div className="text-xs text-muted-foreground">
+                      Start and end at the same location, covering all districts
+                    </div>
+                  </button>
+                </div>
+
+                {/* Starting Point Selection */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Starting Point</label>
+                  <Select value={startingPoint} onValueChange={setStartingPoint}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose where you'll begin your journey" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedDistricts.map((district) => (
+                        <SelectItem key={district} value={district}>
+                          Start from {district}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
             <Button 
               onClick={() => setStep(2)}
               className="w-full py-3 text-lg"
@@ -780,6 +1128,8 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
             >
               Next: Review Preferences
             </Button>
+            </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -1097,7 +1447,7 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
                 <ul className="space-y-2">
                   {generatedItinerary.weatherTips.map((tip, idx) => (
                     <li key={idx} className="text-sm flex items-start gap-2">
-                      <span className="text-blue-500">•</span>
+                      <span className="text-emerald-500">•</span>
                       {tip}
                     </li>
                   ))}

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Globe, Languages, ChevronDown, User, LogOut, Menu, X, Settings, Heart, Flag, Mountain, TreePine } from "lucide-react";
+import { Globe, Languages, ChevronDown, User, LogOut, Menu, X, Settings, Heart, Flag, Mountain, TreePine, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -661,6 +661,12 @@ const Header = () => {
                     <Link to="/favorites" className="flex items-center space-x-2">
                       <Heart className="h-4 w-4" />
                       <span>Favorites</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-bookings" className="flex items-center space-x-2">
+                      <BookOpen className="h-4 w-4" />
+                      <span>My Bookings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem 

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { 
   TrendingUp, 
@@ -18,7 +20,11 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Lightbulb
+  Lightbulb,
+  Star,
+  User,
+  MapPin,
+  Calendar
 } from 'lucide-react';
 import Groq from 'groq-sdk';
 
@@ -31,11 +37,112 @@ interface AnalysisResult {
   summary: string;
 }
 
+interface UserReview {
+  id: string;
+  userName: string;
+  rating: number;
+  review: string;
+  date: string;
+  location: string;
+  category: string;
+  sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+}
+
 const FeedbackAnalysisPage: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [userRating, setUserRating] = useState(0);
+  const [userName, setUserName] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [previousReviews, setPreviousReviews] = useState<UserReview[]>([
+    {
+      id: '1',
+      userName: 'Rahul Kumar',
+      rating: 5,
+      review: 'Amazing experience at Hundru Falls! The waterfall was breathtaking and the surrounding nature was pristine. Well-maintained facilities and helpful local guides.',
+      date: '2024-11-02',
+      location: 'Hundru Falls, Ranchi',
+      category: 'Nature & Wildlife',
+      sentiment: 'positive'
+    },
+    {
+      id: '2',
+      userName: 'Priya Singh',
+      rating: 4,
+      review: 'Betla National Park safari was thrilling. Saw elephants and deer. However, the roads need improvement. Overall a great wildlife experience.',
+      date: '2024-10-28',
+      location: 'Betla National Park, Palamu',
+      category: 'Wildlife',
+      sentiment: 'positive'
+    },
+    {
+      id: '3',
+      userName: 'Amit Sharma',
+      rating: 3,
+      review: 'Tagore Hill has beautiful views but needs better maintenance. The path was slippery and dangerous. More safety measures required.',
+      date: '2024-10-25',
+      location: 'Tagore Hill, Ranchi',
+      category: 'Tourist Spot',
+      sentiment: 'mixed'
+    },
+    {
+      id: '4',
+      userName: 'Sneha Patel',
+      rating: 5,
+      review: 'Stayed at a tribal homestay in Dumka. Incredible cultural experience! The hosts were warm and welcoming. Learned so much about Santal traditions.',
+      date: '2024-10-20',
+      location: 'Dumka District',
+      category: 'Accommodation',
+      sentiment: 'positive'
+    },
+    {
+      id: '5',
+      userName: 'Vikram Joshi',
+      rating: 2,
+      review: 'Disappointed with the cleanliness at some tourist spots. Beautiful locations but need better waste management systems.',
+      date: '2024-10-15',
+      location: 'Various Locations',
+      category: 'Cleanliness',
+      sentiment: 'negative'
+    }
+  ]);
   const { toast } = useToast();
+
+  const submitReview = () => {
+    if (!feedback.trim() || !userName.trim() || !userRating || !selectedLocation) {
+      toast({
+        title: 'Incomplete Information',
+        description: 'Please fill in all fields including rating and location',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newReview: UserReview = {
+      id: Date.now().toString(),
+      userName,
+      rating: userRating,
+      review: feedback,
+      date: new Date().toISOString().split('T')[0],
+      location: selectedLocation,
+      category: 'General',
+      sentiment: userRating >= 4 ? 'positive' : userRating >= 3 ? 'neutral' : 'negative'
+    };
+
+    setPreviousReviews([newReview, ...previousReviews]);
+    
+    toast({
+      title: 'Review Submitted!',
+      description: 'Thank you for your feedback. It helps us improve!',
+    });
+
+    // Reset form
+    setFeedback('');
+    setUserName('');
+    setUserRating(0);
+    setSelectedLocation('');
+  };
 
   const analyzeFeedback = async () => {
     if (!feedback.trim()) {
@@ -167,19 +274,97 @@ Be specific, actionable, and focus on Jharkhand tourism context. Return ONLY val
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* User Info */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Your Name</label>
+                    <Input
+                      placeholder="Enter your name"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      disabled={isAnalyzing}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Location Visited</label>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hundru Falls, Ranchi">Hundru Falls, Ranchi</SelectItem>
+                        <SelectItem value="Betla National Park, Palamu">Betla National Park, Palamu</SelectItem>
+                        <SelectItem value="Tagore Hill, Ranchi">Tagore Hill, Ranchi</SelectItem>
+                        <SelectItem value="Dassam Falls, Ranchi">Dassam Falls, Ranchi</SelectItem>
+                        <SelectItem value="Netarhat, Latehar">Netarhat, Latehar</SelectItem>
+                        <SelectItem value="Baidyanath Temple, Deoghar">Baidyanath Temple, Deoghar</SelectItem>
+                        <SelectItem value="Dalma Wildlife Sanctuary">Dalma Wildlife Sanctuary</SelectItem>
+                        <SelectItem value="Parasnath Hills">Parasnath Hills</SelectItem>
+                        <SelectItem value="Tribal Villages, Dumka">Tribal Villages, Dumka</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Rating Stars */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Your Rating</label>
+                  <div className="flex gap-2 items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setUserRating(star)}
+                        className="transition-transform hover:scale-110"
+                        disabled={isAnalyzing}
+                      >
+                        <Star
+                          className={`w-8 h-8 ${
+                            star <= userRating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300 dark:text-gray-600'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    {userRating > 0 && (
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        {userRating === 5 ? 'Excellent!' : userRating === 4 ? 'Very Good' : userRating === 3 ? 'Good' : userRating === 2 ? 'Fair' : 'Needs Improvement'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 <Textarea
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Example: I visited Ranchi last week and had an amazing experience. The Tagore Hill was beautiful, but the roads leading to it need maintenance. The local food at Main Road was delicious. Overall, I loved the natural beauty and warm hospitality of Jharkhand people..."
-                  className="min-h-[300px] text-base"
+                  placeholder="Share your detailed experience... What did you love? What could be better?"
+                  className="min-h-[200px] text-base"
                   disabled={isAnalyzing}
                 />
                 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={submitReview}
+                    disabled={isAnalyzing || !feedback.trim() || !userName.trim() || !userRating || !selectedLocation}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white w-full"
+                    size="lg"
+                  >
+                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                    Submit Review
+                  </Button>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 border-t"></div>
+                    <span className="text-xs text-muted-foreground">OR</span>
+                    <div className="flex-1 border-t"></div>
+                  </div>
+
                   <Button
                     onClick={analyzeFeedback}
                     disabled={isAnalyzing || !feedback.trim()}
-                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white flex-1"
+                    variant="outline"
+                    className="w-full"
                     size="lg"
                   >
                     {isAnalyzing ? (
@@ -190,7 +375,7 @@ Be specific, actionable, and focus on Jharkhand tourism context. Return ONLY val
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5 mr-2" />
-                        Analyze Feedback
+                        AI Analysis Only
                       </>
                     )}
                   </Button>
@@ -349,6 +534,77 @@ Be specific, actionable, and focus on Jharkhand tourism context. Return ONLY val
                   </Card>
                 </>
               )}
+            </div>
+          </div>
+
+          {/* Previous Reviews Section */}
+          <div className="mt-16">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Visitor Reviews & Ratings</h2>
+              <p className="text-muted-foreground">See what other travelers are saying about Jharkhand</p>
+              
+              {/* Average Rating */}
+              <div className="mt-6 inline-flex items-center gap-4 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 px-8 py-4 rounded-full">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <div className="text-left">
+                  <div className="text-3xl font-bold text-foreground">
+                    {(previousReviews.reduce((sum, r) => sum + r.rating, 0) / previousReviews.length).toFixed(1)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">{previousReviews.length} reviews</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {previousReviews.map((review) => (
+                <Card key={review.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-semibold">
+                          {review.userName.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-sm">{review.userName}</div>
+                          <div className="flex gap-1 mt-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= review.rating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300 dark:text-gray-600'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant={review.sentiment === 'positive' ? 'default' : review.sentiment === 'negative' ? 'destructive' : 'secondary'} className="text-xs">
+                        {review.sentiment}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-foreground line-clamp-4">{review.review}</p>
+                    
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        <span>{review.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>{new Date(review.date).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
 

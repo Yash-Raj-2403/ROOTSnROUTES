@@ -10,6 +10,9 @@ import {
   ChevronRight, BookOpen, Camera, Mountain, Home
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useToast } from './ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserProfile {
   interests: string[];
@@ -55,6 +58,9 @@ interface BookingAnalytics {
 
 const PredictiveBookingSystem = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile>({
     interests: ['Nature', 'Culture', 'Photography'],
     budget: 'mid-range',
@@ -72,6 +78,8 @@ const PredictiveBookingSystem = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isGenerating, setIsGenerating] = useState(false);
   const [bookingHistory, setBookingHistory] = useState<string[]>([]);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<PredictiveRecommendation | null>(null);
 
   // Mock ML prediction algorithm
   const generatePredictiveRecommendations = async (): Promise<PredictiveRecommendation[]> => {
@@ -289,6 +297,70 @@ const PredictiveBookingSystem = () => {
       case 'medium': return 'text-yellow-600';
       case 'low': return 'text-red-600';
       default: return 'text-gray-600';
+    }
+  };
+
+  // Handle booking
+  const handleBooking = (recommendation: PredictiveRecommendation) => {
+    // Check if user is authenticated
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to make a booking",
+        variant: "destructive",
+        duration: 4000
+      });
+      navigate('/login', { state: { from: '/predictive-booking' } });
+      return;
+    }
+    
+    setSelectedBooking(recommendation);
+    setShowBookingModal(true);
+  };
+
+  const confirmBooking = () => {
+    if (selectedBooking && user) {
+      // Get booking details from modal
+      const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+      const guestsSelect = document.querySelector('select') as HTMLSelectElement;
+      
+      const newBooking = {
+        id: `BK${Date.now()}`,
+        type: selectedBooking.type,
+        name: selectedBooking.name,
+        location: selectedBooking.location,
+        date: dateInput?.value || new Date().toISOString().split('T')[0],
+        guests: parseInt(guestsSelect?.value || '2'),
+        price: selectedBooking.price,
+        status: 'confirmed' as const,
+        bookingDate: new Date().toISOString(),
+        confirmationCode: `RR${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        image: selectedBooking.image,
+        contactPhone: '+91-1234567890',
+        contactEmail: 'support@rootsnroutes.com'
+      };
+
+      // Save to localStorage
+      const existingBookings = JSON.parse(localStorage.getItem(`bookings_${user.id}`) || '[]');
+      existingBookings.push(newBooking);
+      localStorage.setItem(`bookings_${user.id}`, JSON.stringify(existingBookings));
+
+      // Add to booking history
+      setBookingHistory([...bookingHistory, selectedBooking.name]);
+      
+      toast({
+        title: "Booking Confirmed! 🎉",
+        description: `${selectedBooking.name} has been booked successfully. Confirmation code: ${newBooking.confirmationCode}`,
+        duration: 5000
+      });
+
+      // Close modal
+      setShowBookingModal(false);
+      
+      // Redirect to My Bookings
+      setTimeout(() => {
+        navigate('/my-bookings');
+      }, 2000);
     }
   };
 
@@ -564,15 +636,20 @@ const PredictiveBookingSystem = () => {
 
                     {/* Action Buttons */}
                     <div className="flex gap-3 pt-2">
-                      <Button className="flex-1">
+                      <Button className="flex-1" onClick={() => handleBooking(rec)}>
                         <BookOpen className="h-4 w-4 mr-2" />
                         Book Now
                       </Button>
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={() => {
+                        toast({
+                          title: "Saved to Favorites",
+                          description: `${rec.name} has been added to your favorites!`
+                        });
+                      }}>
                         <Heart className="h-4 w-4 mr-2" />
                         Save
                       </Button>
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={() => navigate('/destinations')}>
                         <Camera className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
@@ -604,6 +681,72 @@ const PredictiveBookingSystem = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Booking Confirmation Modal */}
+      {showBookingModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="max-w-lg w-full">
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-primary" />
+                Confirm Your Booking
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-lg">
+                <h3 className="font-bold text-lg mb-2">{selectedBooking.name}</h3>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {selectedBooking.location}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    {selectedBooking.rating}
+                  </span>
+                </div>
+                <p className="text-sm mb-3">{selectedBooking.description}</p>
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <span className="text-sm text-muted-foreground">Price:</span>
+                  <span className="text-xl font-bold text-primary">{selectedBooking.price}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Select Date</label>
+                  <Input type="date" min={new Date().toISOString().split('T')[0]} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Number of Guests</label>
+                  <Select defaultValue="2">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 Guest</SelectItem>
+                      <SelectItem value="2">2 Guests</SelectItem>
+                      <SelectItem value="3">3 Guests</SelectItem>
+                      <SelectItem value="4">4 Guests</SelectItem>
+                      <SelectItem value="5">5+ Guests</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" className="flex-1" onClick={() => setShowBookingModal(false)}>
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={confirmBooking}>
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Proceed to Book
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

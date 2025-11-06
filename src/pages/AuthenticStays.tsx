@@ -21,6 +21,7 @@ const AuthenticStays = () => {
   const [selectedPrice, setSelectedPrice] = useState("all");
   const [includeHidden, setIncludeHidden] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   const authenticStays = [
     {
@@ -1470,14 +1471,29 @@ const AuthenticStays = () => {
               return (
                 <Link key={stay.id} to={`/stays/${stay.id}`} className="block">
                   <Card className="group overflow-hidden hover:shadow-organic-lg transition-all duration-300">
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={stay.image}
-                        alt={stay.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30">
+                      {!imageErrors.has(stay.id) ? (
+                        <img
+                          src={stay.image}
+                          alt={stay.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                          decoding="async"
+                          onError={() => {
+                            setImageErrors(prev => new Set(prev).add(stay.id));
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          {stay.type.toLowerCase().includes('homestay') ? (
+                            <TreePine className="w-20 h-20 text-emerald-500/40" />
+                          ) : stay.type.toLowerCase().includes('lodge') || stay.type.toLowerCase().includes('eco') ? (
+                            <Mountain className="w-20 h-20 text-emerald-500/40" />
+                          ) : (
+                            <UtensilsCrossed className="w-20 h-20 text-emerald-500/40" />
+                          )}
+                        </div>
+                      )}
                       <div className="absolute top-4 left-4">
                         <Badge className="bg-golden-500 text-white">
                           {stay.type}
