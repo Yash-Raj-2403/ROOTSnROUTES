@@ -679,7 +679,7 @@ npm run preview
 
 ## 📄 License
 
-This project is created for the **Smart India Hackathon 2024** and is intended for educational and demonstration purposes.
+This project is intended for educational and demonstration purposes, showcasing digital tourism solutions for Jharkhand.
 
 ---
 
@@ -702,4 +702,4 @@ This project is created for the **Smart India Hackathon 2024** and is intended f
 
 ---
 
-<p align="center">Made with ❤️ for Jharkhand Tourism | Smart India Hackathon 2024</p>
+<p align="center">Made with ❤️ for Jharkhand Tourism</p>
