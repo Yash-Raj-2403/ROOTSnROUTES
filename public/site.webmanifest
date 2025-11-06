@@ -1,13 +1,31 @@
 {
   "name": "ROOTSnROUTES - Jharkhand Eco-Tourism",
   "short_name": "ROOTSnROUTES",
-  "description": "AI-Powered Eco-Tourism Platform for Jharkhand",
+  "description": "AI-Powered Eco-Tourism Platform for Jharkhand - Discover authentic destinations, book homestays, explore local crafts",
   "theme_color": "#059669",
   "background_color": "#ffffff",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "id": "/",
+  "categories": ["travel", "tourism", "lifestyle", "navigation"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
   "icons": [
     {
       "src": "/favicon-16x16.png",
@@ -21,20 +39,73 @@
     },
     {
       "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/apple-touch-icon.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Explore Destinations",
+      "short_name": "Explore",
+      "description": "Discover Jharkhand's hidden gems",
+      "url": "/destinations?source=pwa",
+      "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "AI Trip Planner",
+      "short_name": "Plan Trip",
+      "description": "Create your perfect itinerary",
+      "url": "/ai-trip-planner?source=pwa",
+      "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "Marketplace",
+      "short_name": "Shop",
+      "description": "Browse local handicrafts",
+      "url": "/marketplace?source=pwa",
+      "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "Chatbot",
+      "short_name": "Ask AI",
+      "description": "Get travel assistance",
+      "url": "/?chatbot=open&source=pwa",
+      "icons": [{ "src": "/bot-icon.png", "sizes": "32x32" }]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "prefer_related_applications": false,
+  "related_applications": []
 }
