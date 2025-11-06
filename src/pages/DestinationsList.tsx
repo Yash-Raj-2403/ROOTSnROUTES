@@ -63,9 +63,9 @@ const DestinationsList = () => {
             </div>
 
             {/* Key Features for the district */}
-            <div className="mt-4 bg-blue-50 p-3 rounded">
-              <h4 className="font-semibold text-blue-800 mb-2">📋 District Highlights:</h4>
-              <div className="text-sm text-blue-700">
+            <div className="mt-4 bg-emerald-50 p-3 rounded">
+              <h4 className="font-semibold text-emerald-800 mb-2">📋 District Highlights:</h4>
+              <div className="text-sm text-emerald-700">
                 • Total attractions: {districtPlaces.length} places<br/>
                 • Average rating: {(districtPlaces.reduce((acc, p) => acc + p.rating, 0) / districtPlaces.length).toFixed(1)}/5<br/>
                 • Categories: {[...new Set(districtPlaces.map(p => p.category))].join(', ')}<br/>

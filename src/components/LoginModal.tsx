@@ -190,7 +190,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div className="text-center space-y-2">
                 <CardTitle 
                   id="login-title"
-                  className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                  className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent"
                 >
                   {isLogin ? "Welcome Back!" : "Join ROOTSnROUTES"}
                 </CardTitle>
@@ -245,7 +245,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       placeholder="Enter your full name"
                       value={formData.name}
                       onChange={(e) => handleInputChange("name", e.target.value)}
-                      className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-10"
+                      className="pl-10 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 h-10"
                       required={!isLogin}
                       aria-required={!isLogin}
                       aria-describedby={error ? "error-message" : undefined}
@@ -267,7 +267,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       placeholder="Enter your phone number"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
-                      className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-10"
+                      className="pl-10 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 h-10"
                       required={!isLogin}
                       aria-required={!isLogin}
                       aria-describedby={error ? "error-message" : undefined}
@@ -290,7 +290,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                         value="traveller"
                         checked={formData.userType === 'traveller'}
                         onChange={(e) => handleInputChange("userType", e.target.value)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        className="h-4 w-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                         aria-describedby="user-type-help"
                         aria-label="Select Traveller account type"
                       />
@@ -317,7 +317,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     placeholder="Enter your email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-10"
+                    className="pl-10 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 h-10"
                     required
                     aria-required="true"
                     aria-describedby={error ? "error-message" : undefined}
@@ -338,7 +338,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    className="pl-10 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-10"
+                    className="pl-10 pr-10 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 h-10"
                     required
                     aria-required="true"
                     aria-describedby={error ? "error-message" : "password-help"}
@@ -380,7 +380,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       placeholder="Confirm your password"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                      className="pl-10 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-10"
+                      className="pl-10 pr-10 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 h-10"
                       required={!isLogin}
                       aria-required={!isLogin}
                       aria-describedby={error ? "error-message" : "confirm-password-help"}
@@ -451,7 +451,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <button
                 type="button"
                 onClick={toggleMode}
-                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                className="font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
                 aria-label={isLogin ? "Switch to sign up form" : "Switch to sign in form"}
               >
                 {isLogin ? "Sign up" : "Sign in"}
