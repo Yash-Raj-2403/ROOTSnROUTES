@@ -225,13 +225,16 @@ const AITripPlanner = () => {
   const generateItinerary = useCallback(async () => {
     setIsGenerating(true);
     
-    // Create cache key from preferences
+    // Create cache key from preferences including district selections
     const cacheKey = JSON.stringify({
       duration: preferences.duration,
       budget: preferences.budget,
       interests: preferences.interests.sort(),
       groupSize: preferences.groupSize,
-      targetAreas: preferences.targetAreas.sort()
+      targetAreas: preferences.targetAreas.sort(),
+      selectedDistricts: selectedDistricts.sort(),
+      travelOrder: travelOrder,
+      startingPoint: startingPoint
     });
     
     // Check cache first
@@ -275,6 +278,9 @@ const AITripPlanner = () => {
 - Travel Style: ${preferences.travelStyle}
 - Accommodation Preference: ${preferences.accommodation}
 - Target Areas: ${preferences.targetAreas.join(', ') || 'All of Jharkhand'}
+${selectedDistricts.length > 0 ? `- Specific Districts to Visit: ${selectedDistricts.join(' → ')}` : ''}
+${selectedDistricts.length > 1 ? `- Travel Pattern: ${travelOrder === 'flexible' ? 'Optimize the best route' : travelOrder === 'specific' ? 'Visit districts in the exact order listed above' : 'Create a circular route starting and ending at the same location'}` : ''}
+${startingPoint ? `- Starting Point: Begin the trip from ${startingPoint}` : ''}
 - Interests: ${preferences.interests.join(', ') || 'General sightseeing'}
 - Special Requests: ${preferences.specialRequests || 'None'}
 
@@ -443,7 +449,7 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
     } finally {
       setIsGenerating(false);
     }
-  }, [preferences, itineraryCache]);
+  }, [preferences, selectedDistricts, travelOrder, startingPoint, itineraryCache]);
 
   // AI Trip Generation from Simple Text Input
   const generateFromSimpleText = useCallback(async () => {
