@@ -57,7 +57,7 @@ const SmartWeatherRecommendations = () => {
 
   const locations = [
     'Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar', 'Hazaribagh', 
-    'Giridih', 'Ramgarh', 'Palamu', 'West Singhbhum', 'Netarhat', 'Hundru Falls'
+    'Giridih', 'Ramgarh', 'Palamu', 'West Singhbhum', 'Netarhat'
   ];
 
   // Location-specific attractions and activities
@@ -156,14 +156,6 @@ const SmartWeatherRecommendations = () => {
       photography: ['Netarhat Sunrise Point', 'Sunset Point', 'Pine Forest'],
       cultural: ['Hill Station Heritage', 'Colonial Architecture'],
       museums: ['Netarhat Residential School Museum', 'Hill Station Heritage Center']
-    },
-    'Hundru Falls': {
-      waterfalls: ['Hundru Falls Main', 'Jonha Falls', 'Nearby Cascades'],
-      wildlife: ['Falls Area Wildlife', 'Forest Birds'],
-      hills: ['Falls Surrounding Hills', 'Ranchi Hills Extension'],
-      photography: ['Hundru Falls', 'Rainbow at Falls', 'Forest Trails'],
-      cultural: ['Local Tribal Settlements', 'Falls Legend Stories'],
-      museums: ['Falls Interpretation Center', 'Local Cultural Center']
     }
   };
 
@@ -521,10 +513,12 @@ const SmartWeatherRecommendations = () => {
 
   useEffect(() => {
     const loadWeatherAndRecommendations = async () => {
+      console.log('🌍 Loading recommendations for:', selectedLocation);
       const weather = await fetchWeatherData(selectedLocation);
       setWeatherData(weather);
       
       const activityRecs = generateWeatherBasedRecommendations(weather);
+      console.log('📍 Generated activities:', activityRecs.length, 'activities for', selectedLocation);
       setRecommendations(activityRecs);
       
       const smartSuggs = generateSmartSuggestions(weather, activityRecs);
@@ -743,7 +737,7 @@ const SmartWeatherRecommendations = () => {
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
             {filteredRecommendations.map((rec, idx) => (
-              <Card key={idx} className="shadow-md hover:shadow-lg transition-shadow">
+              <Card key={`${selectedLocation}-${idx}`} className="shadow-md hover:shadow-lg transition-shadow animate-in fade-in duration-300">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -782,13 +776,13 @@ const SmartWeatherRecommendations = () => {
 
                   <div>
                     <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Locations
+                      <MapPin className="h-4 w-4 text-emerald-600" />
+                      <span>Locations in {selectedLocation}</span>
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {rec.locations.map((location, locIdx) => (
-                        <Badge key={locIdx} variant="secondary" className="text-xs">
-                          {location}
+                        <Badge key={locIdx} variant="secondary" className="text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
+                          📍 {location}
                         </Badge>
                       ))}
                     </div>
