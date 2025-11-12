@@ -50,9 +50,7 @@ const SmartWeatherRecommendations = () => {
   const { t } = useLanguage();
   const [selectedLocation, setSelectedLocation] = useState('Ranchi');
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [recommendations, setRecommendations] = useState<ActivityRecommendation[]>([]);
   const [smartSuggestions, setSmartSuggestions] = useState<SmartRecommendation[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
 
   const locations = [
@@ -159,14 +157,7 @@ const SmartWeatherRecommendations = () => {
     }
   };
 
-  const categories = [
-    { value: 'all', label: 'All Activities' },
-    { value: 'outdoor', label: 'Outdoor Adventures' },
-    { value: 'cultural', label: 'Cultural Experiences' },
-    { value: 'photography', label: 'Photography' },
-    { value: 'indoor', label: 'Indoor Activities' },
-    { value: 'adventure', label: 'Adventure Sports' }
-  ];
+
 
   // Mock weather data (in production, use actual weather API)
   const fetchWeatherData = async (location: string): Promise<WeatherData> => {
@@ -375,8 +366,8 @@ const SmartWeatherRecommendations = () => {
     return activities;
   };
 
-  // Generate smart suggestions based on weather and activities
-  const generateSmartSuggestions = (weather: WeatherData, activities: ActivityRecommendation[]): SmartRecommendation[] => {
+  // Generate smart suggestions based on weather
+  const generateSmartSuggestions = (weather: WeatherData): SmartRecommendation[] => {
     const suggestions: SmartRecommendation[] = [];
 
     // Essential items based on temperature
@@ -513,15 +504,11 @@ const SmartWeatherRecommendations = () => {
 
   useEffect(() => {
     const loadWeatherAndRecommendations = async () => {
-      console.log('🌍 Loading recommendations for:', selectedLocation);
+      console.log('🌍 Loading weather for:', selectedLocation);
       const weather = await fetchWeatherData(selectedLocation);
       setWeatherData(weather);
       
-      const activityRecs = generateWeatherBasedRecommendations(weather);
-      console.log('📍 Generated activities:', activityRecs.length, 'activities for', selectedLocation);
-      setRecommendations(activityRecs);
-      
-      const smartSuggs = generateSmartSuggestions(weather, activityRecs);
+      const smartSuggs = generateSmartSuggestions(weather);
       setSmartSuggestions(smartSuggs);
     };
 
@@ -568,10 +555,6 @@ const SmartWeatherRecommendations = () => {
     }
   };
 
-  const filteredRecommendations = selectedCategory === 'all' 
-    ? recommendations 
-    : recommendations.filter(rec => rec.category === selectedCategory);
-
   if (isLoading || !weatherData) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -588,11 +571,15 @@ const SmartWeatherRecommendations = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">Smart Weather Recommendations</h1>
-        <p className="text-muted-foreground text-lg">
-          AI-powered activity suggestions based on real-time weather conditions
+      <div className="text-center space-y-3">
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">Live Weather Information</h1>
+        <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+          Check current weather conditions across Jharkhand to help plan your visit. 
+          For personalized weather-based itineraries, use our AI Trip Planner below.
         </p>
+        <Badge variant="secondary" className="text-sm">
+          Real-time Weather Data • No Fixed Scripts • Flexible Planning
+        </Badge>
       </div>
 
       {/* Location Selector */}
@@ -694,135 +681,49 @@ const SmartWeatherRecommendations = () => {
         </Card>
       )}
 
-      {/* Activity Filter */}
-      <Card>
+      {/* AI Trip Planner CTA */}
+      <Card className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-2 border-emerald-300 dark:border-emerald-700">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-center gap-4">
-            <span className="font-medium">Filter Activities:</span>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-64">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="text-center space-y-4">
+            <div className="text-5xl mb-4">🤖✨</div>
+            <h3 className="text-2xl font-bold text-emerald-800 dark:text-emerald-200">
+              Get Your Personalized Weather-Based Itinerary
+            </h3>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Our AI Trip Planner creates customized itineraries that automatically adapt to weather conditions, 
+              ensuring you get the best experience regardless of the forecast!
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 text-sm text-emerald-700 dark:text-emerald-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>Weather-optimized activities</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>Indoor alternatives for rainy days</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>Perfect timing suggestions</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>Cost & route optimization</span>
+              </div>
+            </div>
+            <Button 
+              size="lg" 
+              className="text-lg px-8 py-6 bg-emerald-600 hover:bg-emerald-700"
+              onClick={() => window.location.href = '/ai-trip-planner'}
+            >
+              🚀 Create My Weather-Smart Itinerary
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              No fixed scripts • Fully personalized • AI-powered recommendations
+            </p>
           </div>
         </CardContent>
       </Card>
-
-      {/* Activity Recommendations */}
-      <div className="grid gap-6">
-        <h2 className="text-2xl font-bold text-center">
-          Recommended Activities ({filteredRecommendations.length})
-        </h2>
-        
-        {filteredRecommendations.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-muted-foreground">No activities match your selected category for current weather conditions.</p>
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedCategory('all')}
-                className="mt-4"
-              >
-                View All Activities
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {filteredRecommendations.map((rec, idx) => (
-              <Card key={`${selectedLocation}-${idx}`} className="shadow-md hover:shadow-lg transition-shadow animate-in fade-in duration-300">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{rec.icon}</span>
-                      <div>
-                        <CardTitle className="text-lg">{rec.activity}</CardTitle>
-                        <Badge className={`${getSuitabilityColor(rec.suitability)} mt-1`}>
-                          {getSuitabilityIcon(rec.suitability)}
-                          <span className="ml-1 capitalize">{rec.suitability}</span>
-                        </Badge>
-                      </div>
-                    </div>
-                    <Badge variant="outline">{rec.category}</Badge>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{rec.reason}</p>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Clock className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Best Time</span>
-                      </div>
-                      <p className="text-muted-foreground">{rec.bestTime}</p>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">💰</span>
-                        <span className="font-medium">Cost</span>
-                      </div>
-                      <p className="text-muted-foreground">{rec.cost}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-emerald-600" />
-                      <span>Locations in {selectedLocation}</span>
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {rec.locations.map((location, locIdx) => (
-                        <Badge key={locIdx} variant="secondary" className="text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
-                          📍 {location}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <Backpack className="h-4 w-4" />
-                      Equipment Needed
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {rec.equipment.map((item, eqIdx) => (
-                        <Badge key={eqIdx} variant="outline" className="text-xs">
-                          {item}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-2">💡 Tips</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      {rec.tips.map((tip, tipIdx) => (
-                        <li key={tipIdx} className="flex items-start gap-2">
-                          <span className="text-primary">•</span>
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <Button className="w-full">
-                    Book This Activity
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 };

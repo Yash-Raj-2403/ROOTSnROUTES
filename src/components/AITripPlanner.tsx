@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -6,9 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { useToast } from './ui/use-toast';
-import { Calendar, Clock, MapPin, Users, Sparkles, Download, Share, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Sparkles, Download, Share, Loader2, Cloud, CloudRain, Sun, Wind, Umbrella, AlertTriangle, Droplets } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import Groq from 'groq-sdk';
+import { weatherService } from '@/services/weatherService';
+import type { WeatherData, WeatherForecast, WeatherSafety } from '@/services/weatherService';
 
 interface TripPreferences {
   duration: string;
@@ -21,6 +23,7 @@ interface TripPreferences {
   targetAreas: string[];
   areaFocus: 'single' | 'multiple' | 'circuit';
   travelRadius: string;
+  startDate?: string; // New: For weather-based planning
 }
 
 interface ItineraryDay {
@@ -34,6 +37,7 @@ interface ItineraryDay {
     duration?: string;
     cost: string;
     type: string;
+    weatherNote?: string; // New: Weather-based reasoning for this activity
     travelToNext?: {
       mode: string;
       duration: string;
@@ -74,6 +78,9 @@ interface GeneratedItinerary {
   recommendations: string[];
   weatherTips: string[];
   culturalTips: string[];
+  weatherBasedRecommendations?: string[]; // New: Weather-specific recommendations
+  weatherForecast?: WeatherForecast; // New: Include weather forecast
+  safetyAnalysis?: WeatherSafety; // New: Safety analysis
 }
 
 const AITripPlanner = () => {
@@ -82,7 +89,7 @@ const AITripPlanner = () => {
   const [plannerMode, setPlannerMode] = useState<'simple' | 'detailed'>('simple'); // New: Toggle between modes
   const [simpleTextInput, setSimpleTextInput] = useState(''); // New: For simple text-based planning
   const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]); // New: Selected districts
-  const [travelOrder, setTravelOrder] = useState<'flexible' | 'specific' | 'circular'>('flexible'); // New: Travel pattern
+  const [travelOrder, setTravelOrder] = useState<'flexible' | 'specific'>('specific'); // New: Travel pattern (default to sequential)
   const [startingPoint, setStartingPoint] = useState(''); // New: Starting district
   
   const [preferences, setPreferences] = useState<TripPreferences>({
@@ -95,15 +102,69 @@ const AITripPlanner = () => {
     specialRequests: '',
     targetAreas: [],
     areaFocus: 'multiple',
-    travelRadius: 'flexible'
+    travelRadius: 'flexible',
+    startDate: ''
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedItinerary, setGeneratedItinerary] = useState<GeneratedItinerary | null>(null);
   const [step, setStep] = useState(1);
+  
+  // New: Weather-related state
+  const [weatherData, setWeatherData] = useState<WeatherForecast | null>(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+  const [weatherError, setWeatherError] = useState<string>('');
 
   // Cache for API responses
   const itineraryCache = useMemo(() => new Map<string, GeneratedItinerary>(), []);
+
+  // Fetch weather data when start date and areas are selected
+  useEffect(() => {
+    const fetchWeatherData = async () => {
+      if (!preferences.startDate || preferences.targetAreas.length === 0) {
+        setWeatherData(null);
+        return;
+      }
+
+      setIsLoadingWeather(true);
+      setWeatherError('');
+
+      try {
+        // Get the primary destination (first selected area or district)
+        const primaryLocation = selectedDistricts.length > 0 
+          ? selectedDistricts[0] 
+          : preferences.targetAreas[0].split(' ')[0]; // Extract district name from area
+
+        const duration = parseInt(preferences.duration) || 5;
+        const forecast = await weatherService.getWeatherForecast(primaryLocation, duration);
+
+        if (forecast) {
+          setWeatherData(forecast);
+          
+          // Analyze weather safety
+          if (forecast.daily.length > 0) {
+            const avgTemp = forecast.daily.reduce((sum, day) => sum + day.temperature, 0) / forecast.daily.length;
+            const hasRain = forecast.daily.some(day => day.condition.toLowerCase().includes('rain'));
+            
+            if (hasRain) {
+              toast({
+                title: "Weather Alert",
+                description: `Rain expected during your trip to ${primaryLocation}. Pack accordingly!`,
+                duration: 5000
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching weather:', error);
+        setWeatherError('Could not fetch weather data. Continuing without weather information.');
+      } finally {
+        setIsLoadingWeather(false);
+      }
+    };
+
+    fetchWeatherData();
+  }, [preferences.startDate, preferences.targetAreas, selectedDistricts, toast]);
 
   const interestOptions = [
     'Tribal Culture', 'Waterfalls', 'Wildlife', 'Temples', 'Handicrafts', 
@@ -268,39 +329,151 @@ const AITripPlanner = () => {
         dangerouslyAllowBrowser: true
       });
 
-      // Create detailed prompt for AI
-      const prompt = `You are an expert travel planner specializing in Jharkhand tourism. Create a detailed, realistic ${preferences.duration}-day itinerary with proper time management and travel directions.
+      // Build weather context for AI with detailed metrics
+      let weatherContext = '';
+      if (weatherData && weatherData.daily.length > 0) {
+        console.log('🌤️ Weather data available for AI:', weatherData.daily.length, 'days');
+        
+        // Notify user that weather-based planning is active
+        toast({
+          title: "Weather-Based Planning Active",
+          description: `Analyzing ${weatherData.daily.length} days of weather data to optimize your itinerary...`,
+          duration: 4000
+        });
+        
+        weatherContext = `\n**WEATHER FORECAST (CRITICAL - PLAN AROUND THIS):**`;
+        weatherData.daily.forEach((day, idx) => {
+          weatherContext += `\n- Day ${idx + 1} (${day.date}): ${day.temperature}°C, ${day.condition} - ${day.description}`;
+          weatherContext += `\n  📊 Conditions: Humidity ${day.humidity}%, Wind ${day.windSpeed} km/h, Visibility ${day.visibility} km`;
+          if (day.uvIndex) weatherContext += `, UV Index ${day.uvIndex}`;
+          if (day.precipitationChance && day.precipitationChance > 30) {
+            weatherContext += `\n  ⚠️ Rain Chance: ${day.precipitationChance}%`;
+          }
+        });
+        
+        // Add comprehensive weather-based recommendations
+        const hasRain = weatherData.daily.some(d => d.condition.toLowerCase().includes('rain'));
+        const avgTemp = weatherData.daily.reduce((sum, d) => sum + d.temperature, 0) / weatherData.daily.length;
+        const hasHeat = avgTemp > 35;
+        const hasCold = avgTemp < 15;
+        const lowVisibilityDays = weatherData.daily.filter(d => d.visibility < 5).length;
+        const highUVDays = weatherData.daily.filter(d => (d.uvIndex || 0) > 7).length;
+        const windyDays = weatherData.daily.filter(d => d.windSpeed > 20).length;
+        
+        weatherContext += `\n\n**WEATHER-BASED PLANNING REQUIREMENTS:**`;
+        
+        if (hasRain) {
+          weatherContext += `\n- 🌧️ RAIN EXPECTED: Prioritize indoor activities, covered sites, and museums on rainy days`;
+          weatherContext += `\n- Schedule outdoor activities (waterfalls, hiking, wildlife) ONLY on clear weather days`;
+          weatherContext += `\n- Add rain gear recommendations and indoor backup plans`;
+        }
+        
+        if (hasHeat) {
+          weatherContext += `\n- 🌡️ HIGH TEMPERATURES: Schedule outdoor activities in early morning (6-9 AM) or evening (4-6 PM)`;
+          weatherContext += `\n- Avoid midday outdoor activities (11 AM - 3 PM)`;
+          weatherContext += `\n- Include hydration breaks, shaded rest areas, and air-conditioned venues`;
+        }
+        
+        if (hasCold) {
+          weatherContext += `\n- 🧥 COLD WEATHER: Morning activities may need to start later (8-9 AM)`;
+          weatherContext += `\n- Recommend warm clothing layers and hot beverages`;
+          weatherContext += `\n- Indoor activities and cultural sites are preferable`;
+        }
+        
+        if (lowVisibilityDays > 0) {
+          weatherContext += `\n- 👁️ LOW VISIBILITY ALERT (${lowVisibilityDays} days): Avoid scenic viewpoints, photography spots, and panoramic locations on low visibility days`;
+          weatherContext += `\n- Focus on close-range activities: local markets, temples, museums, cultural centers`;
+          weatherContext += `\n- Schedule viewpoint visits and landscape photography on high visibility days only`;
+        }
+        
+        if (highUVDays > 0) {
+          weatherContext += `\n- ☀️ HIGH UV INDEX (${highUVDays} days): Essential sun protection - sunscreen, hats, sunglasses`;
+          weatherContext += `\n- Seek shade during peak UV hours (10 AM - 4 PM)`;
+          weatherContext += `\n- Prefer shaded trails, covered areas, or indoor activities during intense UV periods`;
+        }
+        
+        if (windyDays > 0) {
+          weatherContext += `\n- 💨 WINDY CONDITIONS (${windyDays} days): Avoid exposed hilltops, open viewpoints, and adventure activities`;
+          weatherContext += `\n- Choose sheltered locations, valleys, and indoor-outdoor mixed venues`;
+        }
+        
+        weatherContext += `\n\n**IMPORTANT**: Match each day's activities to that specific day's weather conditions. Don't schedule outdoor activities on rainy/foggy days!`;
+      }
 
-**Trip Details:**
+      // Create detailed prompt for AI - WEATHER FIRST!
+      const prompt = `You are an expert travel planner specializing in Jharkhand tourism.
+
+🚨 CRITICAL: This is a WEATHER-DRIVEN itinerary. DO NOT use generic/template activities. EACH DAY must be customized to its SPECIFIC weather!
+${weatherContext}
+
+**Trip Preferences:**
 - Duration: ${preferences.duration} days
+${preferences.startDate ? `- Start Date: ${preferences.startDate}` : ''}
 - Budget: ${preferences.budget} (${preferences.budget === 'budget' ? '₹2,000-5,000/day' : preferences.budget === 'mid-range' ? '₹5,000-10,000/day' : '₹10,000+/day'})
 - Group Size: ${preferences.groupSize}
 - Travel Style: ${preferences.travelStyle}
 - Accommodation Preference: ${preferences.accommodation}
 - Target Areas: ${preferences.targetAreas.join(', ') || 'All of Jharkhand'}
 ${selectedDistricts.length > 0 ? `- Specific Districts to Visit: ${selectedDistricts.join(' → ')}` : ''}
-${selectedDistricts.length > 1 ? `- Travel Pattern: ${travelOrder === 'flexible' ? 'Optimize the best route' : travelOrder === 'specific' ? 'Visit districts in the exact order listed above' : 'Create a circular route starting and ending at the same location'}` : ''}
+${selectedDistricts.length > 1 ? `- Travel Pattern: ${travelOrder === 'flexible' ? 'Optimize the best route for efficiency' : 'Visit districts in the exact order listed above'}` : ''}
 ${startingPoint ? `- Starting Point: Begin the trip from ${startingPoint}` : ''}
 - Interests: ${preferences.interests.join(', ') || 'General sightseeing'}
 - Special Requests: ${preferences.specialRequests || 'None'}
 
-**CRITICAL REQUIREMENTS:**
-1. Plan activities in SEQUENTIAL ORDER with realistic timing
-2. For each activity, include:
+**CRITICAL REQUIREMENTS - WEATHER-ADAPTIVE PLANNING:**
+
+⚠️ **MANDATORY**: You MUST customize activities based on the EXACT weather for each specific day. DO NOT use generic/fixed scripts!
+
+1. **WEATHER-FIRST PLANNING** - Match activities to ACTUAL weather conditions:
+   
+   FOR RAINY DAYS (if weather shows rain):
+   - ❌ NO waterfalls, trekking, wildlife safaris, outdoor viewpoints
+   - ✅ YES to: State Museum, Tribal Research Institute, indoor temples, covered markets, shopping malls, cultural centers
+   - Example: "Day 1 (Rainy, 25°C) → Jharkhand State Museum (9 AM), Tribal Craft Market (12 PM), Nakshatra Van covered botanical garden"
+   
+   FOR CLEAR/SUNNY DAYS (if weather shows clear):
+   - ✅ YES to: Hundru Falls, Jonha Falls, Betla National Park, Rock Garden, hiking trails, panoramic viewpoints
+   - ❌ NO to: Extended indoor activities
+   - Example: "Day 2 (Clear, 28°C) → Hundru Falls trek (7 AM), Dasham Falls photography (11 AM), Ranchi Lake sunset"
+   
+   FOR HOT DAYS (>32°C):
+   - Schedule outdoor activities ONLY 6-9 AM and 4-7 PM
+   - Midday (10 AM-4 PM): Indoor museums, air-conditioned venues, lunch break
+   - Example: "Day 3 (Hot, 35°C) → Early morning Tagore Hill (6:30 AM), midday Science Centre (11 AM-2 PM), evening Ranchi Lake (5 PM)"
+   
+   FOR LOW VISIBILITY DAYS (<5km):
+   - ❌ NO scenic viewpoints, waterfalls, panoramic spots
+   - ✅ YES to: Local temples, markets, cultural sites, indoor attractions
+   
+   FOR FOGGY/MISTY DAYS:
+   - Delay morning start to 9-10 AM (wait for visibility)
+   - Focus on nearby attractions, avoid long drives
+
+2. **EACH DAY MUST BE DIFFERENT** based on its specific weather - no copy-paste!
+
+3. For each activity, include:
    - Exact time (e.g., "08:30 AM")
    - Duration of activity
-   - Travel time to next location
-   - Best route/transportation mode (e.g., "20 min drive via NH33", "45 min local bus")
-3. Account for:
-   - Morning: Start around 7-8 AM (after breakfast)
+   - Specific weather reason in description (e.g., "Perfect for clear weather photography", "Indoor alternative for rainy day")
+   - Travel time and route to next location
+   - Transportation mode with cost
+
+4. Account for:
+   - Morning: Start 7-8 AM (clear days) or 9-10 AM (foggy/cold days)
    - Lunch break: 12:30-2:00 PM
    - Evening: Activities until 6-7 PM
-   - Travel time between locations (be realistic!)
-4. Include specific directions like:
+   - Realistic travel times with weather delays
+   - Weather-based route changes
+
+5. Include specific directions like:
    - "From Ranchi, take NH33 towards Hundru Falls (45km, 1 hour drive)"
    - "Local auto-rickshaw from hotel (15 min, ₹50)"
-5. Real places in Jharkhand: Hundru Falls, Dassam Falls, Tagore Hill, Betla National Park, Netarhat, etc.
-6. Calculate costs realistically (entry fees, transport, meals)
+
+6. Real places in Jharkhand: Hundru Falls, Dassam Falls, Tagore Hill, Betla National Park, Netarhat, Ranchi Lake, State Museum, Tribal Research Institute, etc.
+
+7. Calculate costs realistically (entry fees, transport, meals)
+
+**REMEMBER**: If Day 1 is rainy → museums. If Day 2 is clear → waterfalls. Make it OBVIOUS why you chose each activity!
 
 **Format your response as valid JSON:**
 {
@@ -310,16 +483,17 @@ ${startingPoint ? `- Starting Point: Begin the trip from ${startingPoint}` : ''}
   "days": [
     {
       "day": 1,
-      "title": "Day title with main focus",
+      "title": "Day title mentioning weather (e.g., 'Rainy Day Museum & Culture Tour' or 'Clear Weather Waterfall Adventure')",
       "activities": [
         {
           "time": "08:30 AM",
           "activity": "Activity name",
           "location": "Specific location with district",
-          "description": "What you'll experience",
+          "description": "What you'll experience. INCLUDE weather-based reasoning here! (e.g., 'Perfect for clear weather with excellent visibility for photography' OR 'Indoor alternative due to expected rain')",
           "duration": "2 hours",
           "cost": "₹XXX",
           "type": "Cultural/Nature/Adventure",
+          "weatherNote": "Why this activity fits today's weather (e.g., 'Clear weather ideal for waterfall visit', 'Indoor museum perfect for rainy day', 'Early timing to avoid 35°C heat')",
           "travelToNext": {
             "mode": "Car/Bus/Auto",
             "duration": "45 minutes",
@@ -373,31 +547,48 @@ ${startingPoint ? `- Starting Point: Begin the trip from ${startingPoint}` : ''}
   ],
   "recommendations": [
     "Book specific hotels/activities in advance",
-    "Best time to visit each location",
-    "What to carry (weather-specific)",
+    "Best time to visit each location based on weather",
+    "Weather-specific gear and clothing",
     "Safety tips for the region"
   ],
   "weatherTips": [
-    "Current season weather details",
-    "What to pack",
-    "Best time for outdoor activities"
+    "Day-by-day weather summary and its impact on activities",
+    "Essential items to pack for the forecasted conditions",
+    "Best times for outdoor vs indoor activities",
+    "Weather-related safety precautions",
+    "Backup plans for poor weather days"
   ],
   "culturalTips": [
     "Tribal etiquette and customs",
     "Local festivals during visit",
     "Photography permissions",
     "Language tips (local greetings)"
+  ],
+  "weatherBasedRecommendations": [
+    "Specific activity adjustments based on forecast",
+    "Alternative indoor options for rainy days",
+    "Optimal timing for weather-sensitive activities"
   ]
 }
 
-BE REALISTIC: Use actual places, real travel times, proper costs, and sequential timing!`;
+BE REALISTIC: Use actual places, real travel times, proper costs, and sequential timing! PRIORITIZE WEATHER-APPROPRIATE ACTIVITIES FOR EACH DAY!
+
+**BEFORE YOU RESPOND - VERIFY THIS CHECKLIST:**
+□ Did I check the weather for EACH specific day above?
+□ If Day X shows "Rain" - did I avoid waterfalls/outdoor activities?
+□ If Day X shows "Clear" - did I include outdoor attractions?
+□ If Day X shows "Low Visibility" - did I avoid viewpoints?
+□ Did I add a "weatherNote" for EVERY activity explaining why it fits the weather?
+□ Are my activities DIFFERENT for different weather days (not copy-paste)?
+
+If you answer NO to any of these, GO BACK and fix the itinerary!`;
 
       // Call Groq API with active model
       const chatCompletion = await groq.chat.completions.create({
         messages: [
           {
             role: 'system',
-            content: 'You are an expert Jharkhand travel planner with deep knowledge of routes, timings, and logistics. Create realistic, sequential itineraries with proper time management and travel directions. Always respond with valid JSON format only.'
+            content: 'You are an expert Jharkhand travel planner with deep knowledge of routes, timings, logistics, and weather patterns. You MUST create weather-adaptive itineraries - different weather = different activities. NEVER use generic/template activities. If Day 1 is rainy, schedule museums NOT waterfalls. If Day 2 is clear, schedule waterfalls NOT museums. Weather dictates EVERYTHING. Every activity must have a weatherNote explaining why it fits that day\'s specific weather. Always respond with valid JSON format only.'
           },
           {
             role: 'user',
@@ -405,7 +596,7 @@ BE REALISTIC: Use actual places, real travel times, proper costs, and sequential
           }
         ],
         model: 'llama-3.3-70b-versatile', // Updated to active model
-        temperature: 0.8,
+        temperature: 0.5, // Reduced from 0.8 for more consistent weather-based planning
         max_tokens: 8000,
         response_format: { type: 'json_object' }
       });
@@ -905,14 +1096,40 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             {/* Detailed Form Mode */}
             {plannerMode === 'detailed' && (
               <>
+            <p className="text-xs text-muted-foreground text-center">
+              Fields marked with <span className="text-red-500 font-semibold">*</span> are required
+            </p>
+
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium mb-2 block">Trip Duration</label>
+                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  Trip Start Date
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <Input
+                  type="date"
+                  value={preferences.startDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setPreferences(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="w-full"
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  📍 Required for weather-based planning
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Trip Duration
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
                 <Select value={preferences.duration} onValueChange={(value) => 
                   setPreferences(prev => ({ ...prev, duration: value }))
                 }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select duration" />
+                    <SelectValue placeholder="Select duration *" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="2">2 Days</SelectItem>
@@ -926,12 +1143,15 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Budget Range</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Budget Range
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
                 <Select value={preferences.budget} onValueChange={(value) => 
                   setPreferences(prev => ({ ...prev, budget: value }))
                 }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select budget" />
+                    <SelectValue placeholder="Select budget *" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="budget">Budget (₹2,000-5,000/day)</SelectItem>
@@ -942,12 +1162,15 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Group Size</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Group Size
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
                 <Select value={preferences.groupSize} onValueChange={(value) => 
                   setPreferences(prev => ({ ...prev, groupSize: value }))
                 }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select group size" />
+                    <SelectValue placeholder="Select group size *" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="solo">Solo Traveler</SelectItem>
@@ -964,7 +1187,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                   setPreferences(prev => ({ ...prev, travelStyle: value }))
                 }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select style" />
+                    <SelectValue placeholder="Select style (optional)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="relaxed">Relaxed & Cultural</SelectItem>
@@ -977,12 +1200,15 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Accommodation Preference</label>
+              <label className="text-sm font-medium mb-2 block">
+                Accommodation Preference
+                <span className="text-xs text-muted-foreground ml-2">(optional)</span>
+              </label>
               <Select value={preferences.accommodation} onValueChange={(value) => 
                 setPreferences(prev => ({ ...prev, accommodation: value }))
               }>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select accommodation" />
+                  <SelectValue placeholder="Select accommodation (optional)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="homestay">Tribal Homestays</SelectItem>
@@ -995,7 +1221,10 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-3 block">Interests & Activities</label>
+              <label className="text-sm font-medium mb-3 block">
+                Interests & Activities
+                <span className="text-xs text-muted-foreground ml-2">(optional)</span>
+              </label>
               <div className="flex flex-wrap gap-2">
                 {interestOptions.map((interest) => (
                   <Badge
@@ -1011,9 +1240,12 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Special Requests</label>
+              <label className="text-sm font-medium mb-2 block">
+                Special Requests
+                <span className="text-xs text-muted-foreground ml-2">(optional)</span>
+              </label>
               <Textarea
-                placeholder="Any special requirements, dietary restrictions, mobility needs, or specific places you want to visit..."
+                placeholder="Any special requirements, dietary restrictions, mobility needs, or specific places you want to visit... (optional)"
                 value={preferences.specialRequests}
                 onChange={(e) => setPreferences(prev => ({ ...prev, specialRequests: e.target.value }))}
                 rows={3}
@@ -1021,108 +1253,128 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             </div>
 
             {/* District Selection */}
-            <div className="space-y-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-lg">Select Districts to Visit</h3>
+                <label className="text-sm font-medium">
+                  Select Districts to Visit
+                  <span className="text-xs text-muted-foreground ml-2">(Click in order of visit)</span>
+                </label>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar', 'Hazaribagh', 'Giridih', 'Dumka', 'Palamu', 'Ramgarh', 'Netarhat', 'Khunti'].map((district) => (
-                  <Badge
-                    key={district}
-                    variant={selectedDistricts.includes(district) ? "default" : "outline"}
-                    className="cursor-pointer hover:bg-primary/80 px-3 py-2 text-center justify-center"
-                    onClick={() => {
-                      if (selectedDistricts.includes(district)) {
-                        setSelectedDistricts(selectedDistricts.filter(d => d !== district));
-                      } else {
-                        setSelectedDistricts([...selectedDistricts, district]);
-                      }
-                    }}
-                  >
-                    {district}
-                  </Badge>
-                ))}
+              <div className="border rounded-lg p-4 bg-muted/30 max-h-64 overflow-y-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {[
+                    'Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar', 'Hazaribagh',
+                    'Giridih', 'Dumka', 'Palamu', 'Ramgarh', 'Netarhat', 'Khunti',
+                    'Chatra', 'Koderma', 'Garhwa', 'Latehar', 'Lohardaga', 'Simdega',
+                    'Gumla', 'Sahebganj', 'Pakur', 'Godda', 'Jamtara', 'East Singhbhum'
+                  ].map((district) => {
+                    const selectedIndex = selectedDistricts.indexOf(district);
+                    const isSelected = selectedIndex !== -1;
+                    
+                    return (
+                      <button
+                        key={district}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedDistricts(selectedDistricts.filter(d => d !== district));
+                          } else {
+                            setSelectedDistricts([...selectedDistricts, district]);
+                          }
+                        }}
+                        className={`
+                          px-3 py-2 rounded-md text-sm font-medium transition-all text-left
+                          ${isSelected 
+                            ? 'bg-primary text-white shadow-md' 
+                            : 'bg-background hover:bg-muted border border-input'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-2">
+                          {isSelected && (
+                            <span className="bg-white text-primary rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                              {selectedIndex + 1}
+                            </span>
+                          )}
+                          <span className={isSelected ? '' : 'ml-7'}>{district}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {selectedDistricts.length > 0 && (
-                <div className="text-sm text-muted-foreground mt-2">
-                  ✓ {selectedDistricts.length} district{selectedDistricts.length > 1 ? 's' : ''} selected: {selectedDistricts.join(', ')}
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                  <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-2">
+                    📍 Your Journey Route ({selectedDistricts.length} stops):
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {selectedDistricts.map((district, idx) => (
+                      <React.Fragment key={district}>
+                        <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md border border-emerald-200 dark:border-emerald-700">
+                          <span className="bg-emerald-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </span>
+                          <span className="text-sm font-medium">{district}</span>
+                        </div>
+                        {idx < selectedDistricts.length - 1 && (
+                          <span className="text-emerald-600 font-bold">→</span>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    💡 Click districts again to remove them from your route
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Travel Order Preference */}
+            {/* Travel Order Preference - Simplified */}
             {selectedDistricts.length > 1 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  <label className="text-sm font-medium">Travel Pattern</label>
-                </div>
+              <div className="space-y-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  How should we plan your route?
+                </label>
                 
-                <div className="grid md:grid-cols-3 gap-3">
-                  <button
-                    onClick={() => setTravelOrder('flexible')}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      travelOrder === 'flexible'
-                        ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
-                    }`}
-                  >
-                    <div className="text-2xl mb-2">🗺️</div>
-                    <div className="font-semibold mb-1">Flexible Route</div>
-                    <div className="text-xs text-muted-foreground">
-                      AI will optimize the best route based on your preferences
-                    </div>
-                  </button>
-
+                <div className="grid md:grid-cols-2 gap-3">
                   <button
                     onClick={() => setTravelOrder('specific')}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    className={`p-3 rounded-lg border-2 transition-all text-left ${
                       travelOrder === 'specific'
-                        ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-input hover:border-primary/50'
                     }`}
                   >
-                    <div className="text-2xl mb-2">📍</div>
-                    <div className="font-semibold mb-1">Specific Order</div>
-                    <div className="text-xs text-muted-foreground">
-                      Visit districts in the order you selected them
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">📍</span>
+                      <div>
+                        <div className="font-semibold text-sm">Follow My Order</div>
+                        <div className="text-xs text-muted-foreground">Visit in the exact sequence I selected</div>
+                      </div>
                     </div>
                   </button>
+
 
                   <button
-                    onClick={() => setTravelOrder('circular')}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      travelOrder === 'circular'
-                        ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
+                    onClick={() => setTravelOrder('flexible')}
+                    className={`p-3 rounded-lg border-2 transition-all text-left ${
+                      travelOrder === 'flexible'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-input hover:border-primary/50'
                     }`}
                   >
-                    <div className="text-2xl mb-2">🔄</div>
-                    <div className="font-semibold mb-1">Circular Tour</div>
-                    <div className="text-xs text-muted-foreground">
-                      Start and end at the same location, covering all districts
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🔄</span>
+                      <div>
+                        <div className="font-semibold text-sm">Let AI Optimize</div>
+                        <div className="text-xs text-muted-foreground">AI finds the best route for efficiency</div>
+                      </div>
                     </div>
                   </button>
-                </div>
-
-                {/* Starting Point Selection */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Starting Point</label>
-                  <Select value={startingPoint} onValueChange={setStartingPoint}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose where you'll begin your journey" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedDistricts.map((district) => (
-                        <SelectItem key={district} value={district}>
-                          Start from {district}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             )}
@@ -1130,9 +1382,16 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             <Button 
               onClick={() => setStep(2)}
               className="w-full py-3 text-lg"
-              disabled={!preferences.duration || !preferences.budget || !preferences.groupSize}
+              disabled={!preferences.duration || !preferences.budget || !preferences.groupSize || !preferences.startDate}
             >
-              Next: Review Preferences
+              {(!preferences.duration || !preferences.budget || !preferences.groupSize || !preferences.startDate) ? (
+                <span className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Please fill all required fields (*)
+                </span>
+              ) : (
+                'Next: Review Preferences'
+              )}
             </Button>
             </>
             )}
@@ -1144,71 +1403,220 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
 
   if (step === 2) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto p-6">
         {renderStepIndicator()}
         
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Review Your Preferences</CardTitle>
-            <p className="text-center text-muted-foreground">
-              Confirm your details before we generate your personalized itinerary
+        <Card className="shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+          <CardHeader className="text-center space-y-3 pb-8">
+            <div className="text-5xl mb-2">✈️🗺️</div>
+            <CardTitle className="text-3xl font-bold">Review Your Trip Plan</CardTitle>
+            <p className="text-muted-foreground text-lg">
+              Confirm your details before we create your perfect weather-optimized itinerary
             </p>
           </CardHeader>
           
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Duration</p>
-                    <p className="text-muted-foreground">{preferences.duration} Days</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Group Size</p>
-                    <p className="text-muted-foreground">{preferences.groupSize}</p>
-                  </div>
-                </div>
-              </div>
+          <CardContent className="space-y-8">
+            {/* Trip Overview Cards */}
+            <div className="grid md:grid-cols-4 gap-4">
+              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
+                <CardContent className="pt-6 text-center">
+                  <Calendar className="h-8 w-8 mx-auto mb-3 text-primary" />
+                  <p className="text-sm text-muted-foreground mb-1">Duration</p>
+                  <p className="text-2xl font-bold">{preferences.duration}</p>
+                  <p className="text-xs text-muted-foreground">Days</p>
+                </CardContent>
+              </Card>
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="h-5 w-5 text-primary">💰</span>
-                  <div>
-                    <p className="font-medium">Budget</p>
-                    <p className="text-muted-foreground">{preferences.budget}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Travel Style</p>
-                    <p className="text-muted-foreground">{preferences.travelStyle}</p>
-                  </div>
-                </div>
-              </div>
+              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
+                <CardContent className="pt-6 text-center">
+                  <Users className="h-8 w-8 mx-auto mb-3 text-primary" />
+                  <p className="text-sm text-muted-foreground mb-1">Group Size</p>
+                  <p className="text-lg font-bold capitalize">{preferences.groupSize}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
+                <CardContent className="pt-6 text-center">
+                  <span className="text-4xl mb-3 block">💰</span>
+                  <p className="text-sm text-muted-foreground mb-1">Budget</p>
+                  <p className="text-lg font-bold capitalize">{preferences.budget}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
+                <CardContent className="pt-6 text-center">
+                  <MapPin className="h-8 w-8 mx-auto mb-3 text-primary" />
+                  <p className="text-sm text-muted-foreground mb-1">Destinations</p>
+                  <p className="text-lg font-bold">{selectedDistricts.length || preferences.targetAreas.length || 'Multiple'}</p>
+                  <p className="text-xs text-muted-foreground">Location{(selectedDistricts.length > 1 || preferences.targetAreas.length > 1) ? 's' : ''}</p>
+                </CardContent>
+              </Card>
             </div>
 
-            <div>
-              <p className="font-medium mb-2">Selected Interests:</p>
-              <div className="flex flex-wrap gap-2">
-                {preferences.interests.map((interest) => (
-                  <Badge key={interest} variant="secondary">{interest}</Badge>
-                ))}
-              </div>
+            {/* Your Journey Route */}
+            {selectedDistricts.length > 0 && (
+              <Card className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-2 border-emerald-200 dark:border-emerald-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <span className="text-2xl">🗺️</span>
+                    Your Journey Route
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {selectedDistricts.map((district, idx) => (
+                      <React.Fragment key={district}>
+                        <div className="flex items-center gap-2">
+                          <div className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                            {idx + 1}
+                          </div>
+                          <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-700">
+                            <p className="font-bold text-emerald-800 dark:text-emerald-200">{district}</p>
+                            {idx === 0 && (
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400">Starting Point</p>
+                            )}
+                          </div>
+                        </div>
+                        {idx < selectedDistricts.length - 1 && (
+                          <span className="text-2xl text-emerald-600">→</span>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div className="mt-4 p-3 bg-white/50 dark:bg-gray-800/50 rounded-md">
+                    <p className="text-sm">
+                      <strong>Travel Pattern:</strong> {
+                        travelOrder === 'specific' ? '� Follow My Order - Visit districts in the exact sequence selected' :
+                        '🔄 Let AI Optimize - AI will find the most efficient route'
+                      }
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Trip Details */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-xl">✨</span>
+                    Your Interests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {preferences.interests.length > 0 ? (
+                      preferences.interests.map((interest) => (
+                        <Badge key={interest} variant="secondary" className="text-sm">
+                          {interest}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">General sightseeing</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-xl">🏨</span>
+                    Preferences
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p><strong>Travel Style:</strong> <span className="capitalize">{preferences.travelStyle}</span></p>
+                  <p><strong>Accommodation:</strong> <span className="capitalize">{preferences.accommodation}</span></p>
+                  {preferences.startDate && (
+                    <p><strong>Start Date:</strong> {new Date(preferences.startDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {preferences.specialRequests && (
-              <div>
-                <p className="font-medium mb-2">Special Requests:</p>
-                <p className="text-muted-foreground bg-muted p-3 rounded-md">
-                  {preferences.specialRequests}
-                </p>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-xl">📝</span>
+                    Special Requests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground bg-muted p-4 rounded-md italic">
+                    "{preferences.specialRequests}"
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Weather Forecast Display */}
+            {preferences.startDate && (
+              <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <Cloud className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold text-lg">Weather Forecast</h3>
+                </div>
+                
+                {isLoadingWeather && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading weather data...</span>
+                  </div>
+                )}
+
+                {weatherError && (
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm">{weatherError}</span>
+                  </div>
+                )}
+
+                {weatherData && weatherData.daily.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Forecast for {selectedDistricts[0] || preferences.targetAreas[0]?.split(' ')[0] || 'selected area'}
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                      {weatherData.daily.slice(0, parseInt(preferences.duration) || 5).map((day, idx) => (
+                        <div key={idx} className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Day {idx + 1}</p>
+                          <div className="flex items-center gap-2 mb-2">
+                            {day.condition.toLowerCase().includes('rain') ? (
+                              <CloudRain className="h-5 w-5 text-blue-500" />
+                            ) : day.condition.toLowerCase().includes('cloud') ? (
+                              <Cloud className="h-5 w-5 text-gray-500" />
+                            ) : (
+                              <Sun className="h-5 w-5 text-yellow-500" />
+                            )}
+                            <span className="text-lg font-bold">{day.temperature}°C</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground capitalize">{day.description}</p>
+                          {day.precipitationChance && day.precipitationChance > 30 && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Umbrella className="h-3 w-3 text-blue-500" />
+                              <span className="text-xs text-blue-600 dark:text-blue-400">{day.precipitationChance}%</span>
+                            </div>
+                          )}
+                          {day.windSpeed > 10 && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Wind className="h-3 w-3 text-gray-500" />
+                              <span className="text-xs text-gray-600 dark:text-gray-400">{day.windSpeed} m/s</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-md">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        ⚡ <strong>Smart Planning:</strong> Your itinerary will be optimized based on this weather forecast - 
+                        outdoor activities on clear days, indoor experiences when it rains!
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1283,15 +1691,72 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
 
           {/* Daily Itinerary */}
           <div className="grid gap-6">
-            {generatedItinerary.days.map((day) => (
-              <Card key={day.day} className="shadow-md">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
-                      {day.day}
-                    </span>
-                    {day.title}
-                  </CardTitle>
+            {generatedItinerary.days.map((day, dayIndex) => {
+              const dayWeather = weatherData?.daily[dayIndex];
+              return (
+              <Card key={day.day} className="shadow-md border-l-4 border-l-primary">
+                <CardHeader className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
+                        {day.day}
+                      </span>
+                      {day.title}
+                    </CardTitle>
+                  </div>
+
+                  {/* Weather for this day */}
+                  {dayWeather && (
+                    <div className="bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/30 p-4 rounded-lg border border-sky-200 dark:border-sky-800">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="text-center">
+                            {dayWeather.condition.toLowerCase().includes('rain') ? (
+                              <CloudRain className="h-10 w-10 text-blue-500 mx-auto mb-1" />
+                            ) : dayWeather.condition.toLowerCase().includes('cloud') ? (
+                              <Cloud className="h-10 w-10 text-gray-500 mx-auto mb-1" />
+                            ) : (
+                              <Sun className="h-10 w-10 text-yellow-500 mx-auto mb-1" />
+                            )}
+                            <p className="text-2xl font-bold">{dayWeather.temperature}°C</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-lg capitalize">{dayWeather.description}</p>
+                            <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Droplets className="h-4 w-4" />
+                                {dayWeather.humidity}%
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Wind className="h-4 w-4" />
+                                {dayWeather.windSpeed} m/s
+                              </span>
+                              {dayWeather.precipitationChance && dayWeather.precipitationChance > 30 && (
+                                <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                                  <Umbrella className="h-4 w-4" />
+                                  {dayWeather.precipitationChance}% rain
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={
+                            dayWeather.condition.toLowerCase().includes('rain') ? 'destructive' :
+                            dayWeather.condition.toLowerCase().includes('cloud') ? 'secondary' :
+                            'default'
+                          } className="text-xs mb-2">
+                            {dayWeather.condition.toLowerCase().includes('rain') ? '☔ Indoor Focus' :
+                             dayWeather.condition.toLowerCase().includes('cloud') ? '🌤️ Mixed Activities' :
+                             '☀️ Outdoor Perfect'}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Activities planned for this weather
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardHeader>
                 
                 <CardContent>
@@ -1320,6 +1785,17 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                               {activity.location}
                             </p>
                             <p className="text-sm mt-1">{activity.description}</p>
+                            
+                            {/* Weather-Based Reasoning */}
+                            {activity.weatherNote && (
+                              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-l-2 border-blue-400">
+                                <p className="text-xs flex items-start gap-1">
+                                  <span className="font-semibold text-blue-700 dark:text-blue-300">🌤️ Weather Pick:</span>
+                                  <span className="text-blue-600 dark:text-blue-400">{activity.weatherNote}</span>
+                                </p>
+                              </div>
+                            )}
+                            
                             <p className="text-sm font-medium mt-2">Cost: {activity.cost}</p>
                             
                             {/* Travel Info to Next Location */}
@@ -1420,8 +1896,224 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            );
+            })}
           </div>
+
+          {/* Why This Itinerary Section - Weather-Based Recommendations */}
+          {weatherData && weatherData.daily.length > 0 && (
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <span className="text-2xl">🎯</span>
+                  Why We Recommend This Itinerary (Weather-Based)
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Our AI analyzed real-time weather data to optimize your experience. Here's why each day is planned this way:
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-1 gap-4">
+                  {generatedItinerary.days.map((day, idx) => {
+                    const dayWeather = weatherData.daily[idx];
+                    if (!dayWeather) return null;
+                    
+                    // Weather analysis
+                    const isRainy = dayWeather.condition.toLowerCase().includes('rain');
+                    const isClear = !dayWeather.condition.toLowerCase().includes('rain') && !dayWeather.condition.toLowerCase().includes('cloud');
+                    const isHot = dayWeather.temperature > 32;
+                    const isCold = dayWeather.temperature < 15;
+                    const lowVisibility = dayWeather.visibility < 5;
+                    const goodVisibility = dayWeather.visibility >= 8;
+                    const highHumidity = dayWeather.humidity > 75;
+                    const windyDay = dayWeather.windSpeed > 20;
+                    const highUV = (dayWeather.uvIndex || 0) > 7;
+                    
+                    return (
+                      <div key={idx} className="bg-white/70 dark:bg-gray-800/70 p-5 rounded-lg border-2 border-purple-200 dark:border-purple-700 hover:shadow-lg transition-shadow">
+                        {/* Day Header */}
+                        <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-200 dark:border-purple-700">
+                          <div className="flex items-center gap-3">
+                            <Badge variant="default" className="font-bold text-base px-3 py-1">Day {day.day}</Badge>
+                            <span className="text-lg font-semibold">{day.title}</span>
+                          </div>
+                        </div>
+
+                        {/* Weather Conditions Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">🌡️</span>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Temperature</div>
+                              <div className="font-semibold text-sm">{dayWeather.temperature}°C</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">👁️</span>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Visibility</div>
+                              <div className="font-semibold text-sm">{dayWeather.visibility} km</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">💧</span>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Humidity</div>
+                              <div className="font-semibold text-sm">{dayWeather.humidity}%</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">💨</span>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Wind Speed</div>
+                              <div className="font-semibold text-sm">{dayWeather.windSpeed} km/h</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Weather-Based Recommendations */}
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-sm flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                            <span>💡</span> Why This Day Is Planned This Way:
+                          </h4>
+                          
+                          <div className="space-y-2 text-sm">
+                            {/* Primary Weather Condition */}
+                            {isRainy && (
+                              <div className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                                <span className="text-lg">☔</span>
+                                <div>
+                                  <strong className="text-blue-700 dark:text-blue-300">Rainy Day Strategy:</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    We've scheduled indoor activities like museums, cultural centers, and covered markets. 
+                                    {day.activities.length > 0 && ` Starting with ${day.activities[0].activity} to keep you dry and comfortable.`}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {isClear && !isHot && (
+                              <div className="flex items-start gap-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">
+                                <span className="text-lg">☀️</span>
+                                <div>
+                                  <strong className="text-yellow-700 dark:text-yellow-300">Perfect Weather Day:</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Ideal conditions for outdoor adventures! We've planned waterfalls, trekking, and nature experiences. 
+                                    {day.activities.length > 0 && ` Enjoy ${day.activities[0].activity} in optimal conditions.`}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {isHot && (
+                              <div className="flex items-start gap-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
+                                <span className="text-lg">🌡️</span>
+                                <div>
+                                  <strong className="text-orange-700 dark:text-orange-300">Hot Day Planning:</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Activities scheduled for cooler morning/evening hours. Midday includes shaded or air-conditioned locations to beat the heat.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {isCold && (
+                              <div className="flex items-start gap-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded">
+                                <span className="text-lg">🧥</span>
+                                <div>
+                                  <strong className="text-indigo-700 dark:text-indigo-300">Cool Weather Adaptation:</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Later morning start with warm indoor activities mixed with scenic outdoor viewing during warmest hours.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Visibility-Based Recommendations */}
+                            {goodVisibility && (
+                              <div className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded">
+                                <span className="text-lg">👁️</span>
+                                <div>
+                                  <strong className="text-green-700 dark:text-green-300">Excellent Visibility ({dayWeather.visibility} km):</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Perfect for scenic viewpoints, photography, and panoramic experiences. You'll get stunning views of landscapes and monuments.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {lowVisibility && (
+                              <div className="flex items-start gap-2 p-2 bg-gray-50 dark:bg-gray-900/20 rounded">
+                                <span className="text-lg">🌫️</span>
+                                <div>
+                                  <strong className="text-gray-700 dark:text-gray-300">Low Visibility ({dayWeather.visibility} km):</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Focus on close-range activities like exploring local markets, temples, and cultural experiences where distant views aren't essential.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Humidity Considerations */}
+                            {highHumidity && !isRainy && (
+                              <div className="flex items-start gap-2 p-2 bg-cyan-50 dark:bg-cyan-900/20 rounded">
+                                <span className="text-lg">💧</span>
+                                <div>
+                                  <strong className="text-cyan-700 dark:text-cyan-300">High Humidity ({dayWeather.humidity}%):</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Activities paced with frequent breaks. Prioritizing water-related attractions and shaded locations for comfort.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Wind Considerations */}
+                            {windyDay && (
+                              <div className="flex items-start gap-2 p-2 bg-teal-50 dark:bg-teal-900/20 rounded">
+                                <span className="text-lg">💨</span>
+                                <div>
+                                  <strong className="text-teal-700 dark:text-teal-300">Windy Conditions ({dayWeather.windSpeed} km/h):</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Avoiding exposed hilltops and open areas. Selected sheltered locations and indoor-outdoor mixed activities.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* UV Index Warning */}
+                            {highUV && (
+                              <div className="flex items-start gap-2 p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                                <span className="text-lg">☀️</span>
+                                <div>
+                                  <strong className="text-red-700 dark:text-red-300">High UV Index ({dayWeather.uvIndex}):</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Sun protection essential! Bring sunscreen, hat, and sunglasses. Outdoor activities during less intense UV hours.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Default for moderate conditions */}
+                            {!isRainy && !isClear && !isHot && !isCold && !lowVisibility && !windyDay && (
+                              <div className="flex items-start gap-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded">
+                                <span className="text-lg">🌤️</span>
+                                <div>
+                                  <strong className="text-purple-700 dark:text-purple-300">Balanced Conditions:</strong>
+                                  <p className="text-muted-foreground mt-1">
+                                    Flexible activities that work in any weather, with both indoor and outdoor options optimized for your comfort.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Recommendations & Tips */}
           <div className="grid md:grid-cols-3 gap-6">
@@ -1443,21 +2135,37 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 border-blue-200 dark:border-blue-800">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  🌦️ Weather Tips
+                  <Cloud className="h-5 w-5 text-blue-600" />
+                  Weather-Based Planning
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
                   {generatedItinerary.weatherTips.map((tip, idx) => (
                     <li key={idx} className="text-sm flex items-start gap-2">
-                      <span className="text-emerald-500">•</span>
+                      <span className="text-blue-600">•</span>
                       {tip}
                     </li>
                   ))}
                 </ul>
+                {generatedItinerary.weatherBasedRecommendations && generatedItinerary.weatherBasedRecommendations.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                    <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                      ⚡ Smart Adjustments
+                    </p>
+                    <ul className="space-y-2">
+                      {generatedItinerary.weatherBasedRecommendations.map((rec, idx) => (
+                        <li key={idx} className="text-xs flex items-start gap-2 text-blue-700 dark:text-blue-300">
+                          <span>→</span>
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1479,6 +2187,38 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
               </CardContent>
             </Card>
           </div>
+
+          {/* Weather Forecast Summary (if available) */}
+          {weatherData && weatherData.daily.length > 0 && (
+            <Card className="bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 border-sky-200 dark:border-sky-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sun className="h-5 w-5 text-yellow-500" />
+                  Weather Forecast Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {weatherData.daily.slice(0, parseInt(preferences.duration) || 5).map((day, idx) => (
+                    <div key={idx} className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm text-center">
+                      <p className="text-sm font-medium mb-2">Day {idx + 1}</p>
+                      <div className="flex justify-center mb-2">
+                        {day.condition.toLowerCase().includes('rain') ? (
+                          <CloudRain className="h-8 w-8 text-blue-500" />
+                        ) : day.condition.toLowerCase().includes('cloud') ? (
+                          <Cloud className="h-8 w-8 text-gray-500" />
+                        ) : (
+                          <Sun className="h-8 w-8 text-yellow-500" />
+                        )}
+                      </div>
+                      <p className="text-2xl font-bold">{day.temperature}°C</p>
+                      <p className="text-xs text-muted-foreground mt-1 capitalize">{day.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions */}
           <div className="flex justify-center gap-4">
