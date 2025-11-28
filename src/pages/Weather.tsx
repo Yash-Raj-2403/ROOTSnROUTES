@@ -3,7 +3,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
 import WeatherSafetyWidget from "@/components/WeatherSafetyWidget";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { useLanguage } from "@/hooks/useLanguage";
+import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,11 @@ import {
   Grid,
   List,
   Cloud,
-  MapPin
+  MapPin,
+  Calendar,
+  Car,
+  Phone,
+  Users
 } from 'lucide-react';
 
 // All 24 districts of Jharkhand with their major cities/towns
@@ -363,6 +369,68 @@ const Weather = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Weather-Based Activity Recommendations */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                Plan Your Activities Based on Weather
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-4 mb-6">
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <h3 className="font-semibold text-green-800 dark:text-green-200 mb-2">Sunny Days</h3>
+                  <p className="text-sm text-green-700 dark:text-green-300 mb-3">Perfect for outdoor exploration</p>
+                  <Link to="/natural-wonders">
+                    <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-100">
+                      Visit Waterfalls
+                    </Button>
+                  </Link>
+                </div>
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Rainy Days</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">Great for indoor cultural experiences</p>
+                  <Link to="/cultural-heritage">
+                    <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100">
+                      Explore Museums
+                    </Button>
+                  </Link>
+                </div>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">Cool Weather</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">Ideal for trekking and hiking</p>
+                  <Link to="/destinations">
+                    <Button size="sm" variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-100">
+                      Find Trails
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="text-center">
+                <Link to="/ai-trip-planner">
+                  <Button className="bg-gradient-to-r from-primary to-accent">
+                    Plan Trip Based on Weather Forecast
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Navigation Actions */}
+          <NavigationButtons 
+            showBackButton
+            showRelatedActions
+            relatedActions={[
+              { label: "Smart Weather", path: "/smart-weather", icon: Cloud },
+              { label: "Plan Trip", path: "/ai-trip-planner", icon: Calendar },
+              { label: "Find Activities", path: "/destinations", icon: MapPin },
+              { label: "Book Transport", path: "/transport", icon: Car },
+              { label: "Emergency Help", path: "/support", icon: Phone },
+              { label: "Join Community", path: "/community", icon: Users },
+            ]}
+          />
         </div>
       </motion.main>
       <Footer />

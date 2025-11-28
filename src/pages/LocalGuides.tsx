@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -981,6 +982,17 @@ const LocalGuides = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/services"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Book Tour Guide", path: "/ai-trip-planner", icon: Calendar },
+          { label: "Find Destinations", path: "/destinations", icon: MapPin },
+          { label: "Contact Support", path: "/support", icon: MessageSquare }
+        ]}
+      />
 
       <Footer />
     </main>

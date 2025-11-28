@@ -29,6 +29,10 @@ export const showInstallPrompt = async (): Promise<boolean> => {
 };
 
 export const registerServiceWorker = async (): Promise<void> => {
+  // Temporarily disabled service worker to troubleshoot auto-refresh
+  console.log('Service Worker registration disabled for debugging');
+  return;
+  
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');

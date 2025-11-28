@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -2125,6 +2126,17 @@ const Marketplace = () => {
           </div>
           </div>
         </section>
+
+        <NavigationButtons
+          showBackButton={true}
+          customBackPath="/explore"
+          showRelatedActions={true}
+          relatedActions={[
+            { label: "View Handicrafts", path: "/handicrafts", icon: Heart },
+            { label: "Find Artisan Stays", path: "/stays", icon: Home },
+            { label: "Cultural Tours", path: "/cultural-heritage", icon: Users }
+          ]}
+        />
 
         <Footer />
       </main>

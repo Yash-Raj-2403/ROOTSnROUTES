@@ -11,7 +11,7 @@ import { Globe, Languages, ChevronDown, User, LogOut, Menu, X, Settings, Heart, 
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/contexts/AuthContext";
-import LoginModal from "@/components/LoginModal";
+import { useLogin } from "@/contexts/LoginContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
 import { useState, useRef, useCallback } from "react";
@@ -20,7 +20,7 @@ const Header = () => {
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { showLogin } = useLogin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const isActive = (path: string) => {
@@ -683,7 +683,7 @@ const Header = () => {
                   <Button
                     onClick={() => {
                       console.log("Header Login clicked!");
-                      setShowLoginModal(true);
+                      showLogin();
                     }}
                     variant="default"
                     size="default"
@@ -708,12 +708,6 @@ const Header = () => {
           </div>
         </div>
       </div>
-      
-      {/* Login Modal */}
-      <LoginModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-      />
     </header>
     </>
   );

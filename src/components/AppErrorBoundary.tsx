@@ -7,24 +7,32 @@ interface ErrorFallbackProps {
 }
 
 function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
-  // Log error silently and auto-recover
+  // Log error silently and provide manual recovery
   console.error('App Error:', error);
   
-  // Auto-retry after 1 second
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      resetErrorBoundary();
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [resetErrorBoundary]);
-  
-  // Show minimal loading state instead of error page
+  // Show error state with manual retry option instead of auto-retry
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="text-center space-y-4 max-w-md mx-auto p-6">
+        <div className="text-6xl">⚠️</div>
+        <h2 className="text-xl font-semibold">Something went wrong</h2>
+        <p className="text-muted-foreground text-sm">
+          Don't worry, this is usually temporary. You can try again or refresh the page.
+        </p>
+        <div className="space-x-2">
+          <button
+            onClick={resetErrorBoundary}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Try Again
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -43,8 +51,8 @@ export default function AppErrorBoundary({ children }: AppErrorBoundaryProps) {
         console.error('Error Info:', errorInfo);
       }}
       onReset={() => {
-        // Optionally clear any app state here
-        window.location.reload();
+        // Just clear any app state, don't auto-reload
+        console.log('Error boundary reset');
       }}
     >
       {children}

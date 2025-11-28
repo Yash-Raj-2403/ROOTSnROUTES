@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { BackToDestinations } from "@/components/NavigationButtons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -349,13 +350,9 @@ const DestinationDetail = () => {
           </div>
         </div>
 
-        {/* Back to Destinations */}
-        <div className="mt-12 text-center">
-          <Link to="/destinations">
-            <Button variant="outline" size="lg">
-              ← Back to All Destinations
-            </Button>
-          </Link>
+        {/* Navigation Actions */}
+        <div className="mt-12">
+          <BackToDestinations />
         </div>
       </div>
 

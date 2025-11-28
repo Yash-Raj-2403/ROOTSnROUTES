@@ -1,9 +1,10 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Car, Users, Camera, Mountain, Shield, Phone } from "lucide-react";
+import { MapPin, Calendar, Car, Users, Camera, Mountain, Shield, Phone, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Services = () => {
@@ -130,6 +131,17 @@ const Services = () => {
           </div>
         </div>
       </section>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Start Trip Planning", path: "/ai-trip-planner", icon: Sparkles },
+          { label: "Browse Destinations", path: "/destinations", icon: MapPin },
+          { label: "Get Support", path: "/support", icon: Users }
+        ]}
+      />
 
       <Footer />
     </div>

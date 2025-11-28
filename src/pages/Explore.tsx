@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import ExploreARVRSimple from "@/components/explore/ExploreARVRSimple";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,7 +14,9 @@ import {
   ArrowRight,
   Star,
   Users,
-  Phone
+  Phone,
+  Calendar,
+  Sparkles
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -345,6 +348,17 @@ const Explore = () => {
           </Card>
         </div>
       </section>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Plan Your Trip", path: "/ai-trip-planner", icon: Sparkles },
+          { label: "All Destinations", path: "/destinations", icon: MapPin },
+          { label: "Weather Info", path: "/smart-weather", icon: Calendar }
+        ]}
+      />
 
       <Footer />
     </main>

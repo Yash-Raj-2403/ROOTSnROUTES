@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { ProfileNavigation } from '../components/NavigationButtons';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -359,6 +360,11 @@ Visit: https://rootsnroutes.com
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Continue Exploring Section */}
+        <div className="mt-12">
+          <ProfileNavigation />
         </div>
       </main>
 

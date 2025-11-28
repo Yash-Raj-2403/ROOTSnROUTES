@@ -76,15 +76,10 @@ const TransportCard = ({
           
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              {t('transport.contact')}: {contact}
+              <span className="font-medium">Contact:</span> {contact}
             </div>
             <div className="flex gap-2">
-              {!bookingUrl ? (
-                <Button variant="outline" size="sm">
-                  <Phone className="w-4 h-4" />
-                  {t('transport.call')}
-                </Button>
-              ) : (
+              {bookingUrl ? (
                 <Button 
                   variant="default" 
                   size="sm"
@@ -92,13 +87,14 @@ const TransportCard = ({
                   className="bg-gradient-to-r from-forest-500 to-autumn-500 hover:from-forest-600 hover:to-autumn-600 text-white"
                 >
                   <Globe className="w-4 h-4 mr-2" />
-                  {t('common.bookNow')}
+                  Book Now
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm">
+                  <Phone className="w-4 h-4 mr-2" />
+                  {contact.includes('+91') ? 'Call' : 'Contact'}
                 </Button>
               )}
-              <Button variant="outline" size="sm">
-                <Phone className="w-4 h-4" />
-                {t('transport.contact')}
-              </Button>
             </div>
           </div>
         </div>

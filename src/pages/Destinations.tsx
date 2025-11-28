@@ -1,12 +1,13 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Star, Clock, IndianRupee, Camera, Eye, EyeOff, Filter, Search, ArrowRight } from "lucide-react";
+import { MapPin, Star, Clock, IndianRupee, Camera, Eye, EyeOff, Filter, Search, ArrowRight, Sparkles, Bed, Car } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { allDestinations } from "@/data/completeDestinations";
@@ -370,6 +371,17 @@ const Destinations = () => {
           )}
         </div>
       </section>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/explore"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Plan Your Trip", path: "/ai-trip-planner", icon: Sparkles },
+          { label: "Find Hotels", path: "/stays", icon: Bed },
+          { label: "Local Transport", path: "/transport", icon: Car }
+        ]}
+      />
 
       <Footer />
     </main>

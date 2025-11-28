@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -354,14 +355,21 @@ const RestaurantDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Back Button */}
+        {/* Navigation Actions */}
         <div className="mt-8">
-          <Link to="/restaurants">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Restaurants
-            </Button>
-          </Link>
+          <NavigationButtons 
+            showBackButton
+            customBackPath="/restaurants"
+            showRelatedActions
+            relatedActions={[
+              { label: "Find Stays", path: "/stays", icon: Heart },
+              { label: "Plan Trip", path: "/ai-trip-planner", icon: Camera },
+              { label: "Explore Area", path: "/destinations", icon: MapPin },
+              { label: "Local Guides", path: "/local-guides", icon: Users },
+              { label: "Transport", path: "/transport", icon: Navigation },
+              { label: "My Bookings", path: "/my-bookings", icon: CheckCircle },
+            ]}
+          />
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import { MessageCircle, Users, Activity, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginModal from '@/components/LoginModal';
 import LocalChat from '@/components/LocalChat';
+import { NavigationButtons } from '@/components/NavigationButtons';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DevelopmentNotice from '@/components/DevelopmentNotice';
@@ -137,6 +138,20 @@ const CommunityChat = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Navigation Actions */}
+            <NavigationButtons 
+              showBackButton
+              showRelatedActions
+              relatedActions={[
+                { label: "Explore Destinations", path: "/destinations", icon: Activity },
+                { label: "Plan Trip", path: "/ai-trip-planner", icon: MessageCircle },
+                { label: "Find Stays", path: "/stays", icon: Users },
+                { label: "Local Guides", path: "/local-guides", icon: Users },
+                { label: "Support", path: "/support", icon: MessageCircle },
+                { label: "My Profile", path: "/profile", icon: Users },
+              ]}
+            />
           </div>
         </div>
       </div>

@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
+import { NavigationButtons } from '@/components/NavigationButtons';
 
 const Settings: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -939,6 +940,18 @@ const Settings: React.FC = () => {
           </Card>
         </div>
       </div>
+      
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/profile"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "View Profile", path: "/profile", icon: User },
+          { label: "My Bookings", path: "/my-bookings", icon: SettingsIcon },
+          { label: "Get Support", path: "/support", icon: Shield }
+        ]}
+      />
+      
     </div>
   );
 };

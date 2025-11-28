@@ -81,7 +81,7 @@ const ARVRPreview: React.FC<ARVRPreviewProps> = ({ destination }) => {
                 variant="secondary" 
                 size="sm"
                 onClick={switchToNext}
-                className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30"
+                className="bg-background/20 backdrop-blur-sm border-foreground/30 text-foreground hover:bg-background/30"
               >
                 Next View
               </Button>
@@ -92,7 +92,7 @@ const ARVRPreview: React.FC<ARVRPreviewProps> = ({ destination }) => {
                   <div
                     key={index}
                     className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                      index === currentImageIndex ? 'bg-foreground' : 'bg-foreground/50'
                     }`}
                   />
                 ))}
@@ -134,7 +134,7 @@ const ARVRPreview: React.FC<ARVRPreviewProps> = ({ destination }) => {
               </div>
             </div>
             <div className="absolute top-4 right-4">
-              <Badge variant="secondary" className="bg-white/90 text-primary">
+              <Badge variant="secondary" className="bg-background/90 text-primary">
                 360° Experience
               </Badge>
             </div>

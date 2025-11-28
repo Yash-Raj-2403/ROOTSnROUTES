@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -308,6 +309,17 @@ const CulturalHeritage = () => {
           </Card>
         </div>
       </section>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/explore"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "View Handicrafts", path: "/handicrafts", icon: Heart },
+          { label: "Find Authentic Stays", path: "/stays", icon: MapPin },
+          { label: "Plan Cultural Tour", path: "/ai-trip-planner", icon: Calendar }
+        ]}
+      />
 
       <Footer />
     </main>

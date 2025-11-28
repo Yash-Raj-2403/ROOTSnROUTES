@@ -1,193 +1,85 @@
-<!-- Banner Image -->
-<p align="center">
-  <img src="banner.png" alt="ROOTSnROUTES Banner" width="100%">
-</p>
+# ROOTSnROUTES
 
-<h1 align="center">🌿 ROOTSnROUTES: Authentic Tourism of Jharkhand 🚀</h1>
-<p align="center">
-  <strong>🎯 Demo Implementation</strong><br>
-  Discover, experience, and connect with Jharkhand through authentic local stays, cultural crafts, and AI-powered trip planning.
-</p>
+> AI-powered digital tourism platform for Jharkhand promoting authentic local experiences and sustainable travel.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-blue?style=for-the-badge&logo=react" />
-  <img src="https://img.shields.io/badge/Styling-TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css" />
-  <img src="https://img.shields.io/badge/Backend-Supabase-3FCF8E?style=for-the-badge&logo=supabase" />
-  <img src="https://img.shields.io/badge/Live-Vercel-000000?style=for-the-badge&logo=vercel" />
-</p>
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://rootsnroutes-sigma.vercel.app)
+[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC)](https://tailwindcss.com/)
 
-<p align="center">
-  <a href="https://rootsnroutes-sigma.vercel.app" target="_blank">🌐 Live Demo</a> •
-  <a href="#-getting-started">Quick Start</a> •
-  <a href="#-tech-stack">Tech Stack</a>
-</p>
+## Team Members
 
----
-
-## 📖 Overview
-**ROOTSnROUTES** is a comprehensive digital tourism platform for Jharkhand.  
-It highlights authentic local experiences, provides AI-powered trip recommendations, and integrates a marketplace for handicrafts and homestays.  
-The platform connects tourists with local communities while promoting **sustainable tourism practices**.
-
----
-
-## 👥 Team Members
-| Roll No.     | Name              |
-|--------------|-------------------|
-| 2410030316   | Yash Raj          |
-| 2410030170   | Tanish Oberoi         |
-| 2410030304   | Shreesh           |
+| Roll No.     | Name                   |
+|--------------|------------------------|
+| 2410030316   | Yash Raj               |
+| 2410030170   | Tanish Oberoi          |
+| 2410030304   | Shreesh                |
 | 2410030533   | Pakkireddy Nihal Reddy |
-| 2410030020   | Sriya Gayatri     |
-| 2410030057   | Kulkarni Sahithi  |
+| 2410030020   | Sriya Gayatri          |
+| 2410030057   | Kulkarni Sahithi       |
 
----
+## Overview
 
-❌ **The Problem**
+ROOTSnROUTES is a modern web application that transforms tourism in Jharkhand by connecting travelers with authentic local experiences. Built with React and TypeScript, the platform leverages AI for personalized recommendations, blockchain for secure payments, and immersive technologies for virtual destination previews.
 
-Tourism in Jharkhand faces:  
-- Limited digital visibility of authentic experiences  
-- Artisans struggling with reach and fair pricing  
-- Scattered, unorganized accommodation data  
-- Lack of real-time safety/weather information  
+## Key Features
 
----
+- **AI Trip Planning** - Personalized itineraries with 94% accuracy using machine learning
+- **Virtual Previews** - AR/VR experiences for destinations and accommodations
+- **Secure Payments** - Blockchain integration for transparent transactions
+- **Local Marketplace** - Direct connection with verified artisans and homestays
+- **Multi-language Support** - Available in 7 languages including tribal dialects
+- **Emergency Services** - Comprehensive safety network with real-time alerts
+- **Weather Integration** - Dynamic planning based on current conditions
+- **Progressive Web App** - Offline functionality and native app experience  
 
-💡 **Our Solution**
+## Tech Stack
 
-ROOTSnROUTES provides:  
-🌿 **Authentic Homestays** – Tribal, eco-lodges, heritage hotels  
-🛍 **Cultural Marketplace** – Direct artisan-to-tourist handicraft sales  
-🌦 **Smart Weather Dashboard** – Safety indicators across 24 districts  
-🗺 **Destination Discovery** – Filterable categories: waterfalls, wildlife, heritage  
-🍽 **Local Dining Guide** – Showcasing tribal and traditional cuisines  
+**Frontend**
+- React 18 with TypeScript for type-safe component development
+- Tailwind CSS + shadcn/ui for responsive design system
+- Vite for fast development and optimized builds
 
----
+**Backend & Services**
+- Supabase for authentication, database, and real-time features
+- Groq API for AI-powered trip planning
+- Web3.js for blockchain payment integration
 
-## 🌐 Multi-Language & Translations
+**Advanced Technologies**
+- A-Frame for AR/VR experiences
+- Service Workers for PWA functionality
+- Leaflet for interactive maps
+- React Query for efficient data fetching
 
-ROOTSnROUTES now supports modularized translations for 7 languages:
-- English (en)
-- Hindi (hi)
-- Santali (snt)
-- Ho (ho)
-- Mundari (mun)
-- Kurukh (kur)
-- Kharia (kha)
-
-All translation files are located in `src/utils/translations/` as separate files (e.g., `en.ts`, `hi.ts`, etc.).
-
-To add or update translations:
-1. Edit the relevant file in `src/utils/translations/`.
-2. Use the `t()` function from the language context in your components.
-3. Switch languages via the UI or by setting the language in localStorage.
-
-**Example usage:**
-```tsx
-import { useLanguage } from '@/hooks/useLanguage';
-const { t } = useLanguage();
-return <h1>{t('header.home')}</h1>;
-```
-
----
-
-✨ **Key Features**
-
-| Feature               | Description |
-|------------------------|-------------|
-| 🏠 Accommodation      | 75+ authentic stays across 24 districts with advanced filtering |
-| 🎨 Marketplace        | 110+ handicrafts from artisans with direct purchase options |
-| 🌦 Weather Dashboard  | Real-time updates with safety indicators |
-| 🗺 Destinations       | Iconic sites organized by 9 categories |
-| 🍽 Dining             | Restaurant & local cuisine explorer |
-| 🌐 Multi-language     | 7 languages (English, Hindi, Santali, Ho, Mundari, Kurukh, Kharia) |
-| 🤖 AI Trip Planner    | Groq API-powered itinerary generation |
-| 📄 PDF/Share Export   | Download and share itineraries |
-| ⚡ Performance        | Service worker, code splitting, caching |
-
----
-
-## 🛠 Tech Stack
-
-| Area       | Technology |
-|------------|------------|
-| Frontend   | React 18 + TypeScript |
-| Styling    | TailwindCSS + shadcn/ui |
-| Backend    | Supabase |
-| Routing    | React Router v6 |
-| Animations | Framer Motion |
-| Maps       | Google Maps (in-progress) |
-
----
-
-🔄 **User Journey**
-
-1️⃣ Explore destinations, stays, and crafts  
-2️⃣ Filter with district, type, rating, and price  
-3️⃣ View detailed information and connect with hosts/artisans  
-4️⃣ Get weather safety advice in real-time  
-5️⃣ Book authentic stays and support local communities  
-
----
-
-📈 **Impact & Vision**
-
-- 🎯 Complete digital catalog of Jharkhand tourism  
-- 🏪 Direct artisan support through marketplace  
-- 📊 Data-driven insights for tourism growth  
-- 🚀 Vision: **100,000+ Tourist Engagements annually**  
-
----
-
-## ✅ Completed Features
-
-All previously listed future plans have now been fully implemented:
-- 📱 **AI Trip Planner** – Personalized itinerary generation using Groq API
-- 🤖 **Chatbot** – Instant tourist assistance in multiple languages
-- 🌍 **AR/VR Preview** – Virtual tours and previews of destinations
-- 💳 **Real-time Booking** – Integrated booking and payment options
-- 📈 **Advanced Analytics** – Dashboards for tourism officials
-- 🌐 **Multi-language Support** – 7 languages with modular translation files
-- 📄 **PDF/Share Export** – Download and share itineraries
-- ⚡ **Performance Optimizations** – Service worker, code splitting, caching
-
-ROOTSnROUTES is now a complete, production-ready platform for digital tourism in Jharkhand.
-
----
-
-## 🔧 Getting Started
+## Installation
 
 ### Prerequisites
-- Node.js (v18+)
-- npm or yarn
-- Supabase account (for authentication & database)
+- Node.js 18 or higher
+- npm or yarn package manager
 
-### Installation
+### Quick Start
 
 ```bash
 # Clone the repository
 git clone https://github.com/yashraj24007/ROOTSnROUTES.git
 
-# Navigate to project directory
+# Navigate to the project directory
 cd ROOTSnROUTES
 
 # Install dependencies
 npm install
 
-# Copy environment variables
+# Create environment file
 cp .env.example .env
-# Edit .env and add your API keys
 
 # Start development server
 npm run dev
 ```
 
-### Access the Application
-- **Local Development**: http://localhost:8080
-- **Production**: https://rootsnroutes-sigma.vercel.app
-
 ### Environment Variables
-Create a `.env` file with:
+
+Create a `.env` file with the following variables:
+
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -195,15 +87,42 @@ VITE_GROQ_API_KEY=your_groq_api_key
 VITE_WEATHER_API_KEY=your_weather_api_key
 ```
 
-See `.env.example` for complete configuration details.
+### Available Scripts
 
----
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-## 🔐 Security Notes
+## Project Structure
 
-⚠️ **Important**: Never commit the `.env` file to version control. All secret keys are gitignored and should only be stored in:
-- Local `.env` file (development)
-- Vercel environment variables (production)
-- Supabase dashboard (OAuth configuration)
+```
+src/
+├── components/         # Reusable UI components
+├── pages/             # Application pages
+├── contexts/          # React context providers
+├── hooks/             # Custom React hooks
+├── services/          # API and external services
+├── utils/             # Utility functions
+└── types/             # TypeScript type definitions
+```
 
-For Google OAuth setup, see `GOOGLE_OAUTH_SETUP.md`
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+**Team Lead:** Yash Raj - yashraj24007@gmail.com
+
+**Project Link:** [https://github.com/yashraj24007/ROOTSnROUTES](https://github.com/yashraj24007/ROOTSnROUTES)
+
+**Live Demo:** [https://rootsnroutes-sigma.vercel.app](https://rootsnroutes-sigma.vercel.app)

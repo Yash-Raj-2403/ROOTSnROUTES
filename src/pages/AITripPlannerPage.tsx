@@ -6,14 +6,19 @@ import DevelopmentNotice from '../components/DevelopmentNotice';
 
 const AITripPlannerPage = () => {
   return (
-    <>
+    <main>
       <DevelopmentNotice />
       <Header />
-      <div className="min-h-screen bg-background pt-16">
-        <AITripPlanner />
-      </div>
+      
+      {/* AI Trip Planner Section */}
+      <section className="min-h-screen py-24 bg-background ai-trip-planner-container">
+        <div className="container mx-auto px-6">
+          <AITripPlanner />
+        </div>
+      </section>
+      
       <Footer />
-    </>
+    </main>
   );
 };
 

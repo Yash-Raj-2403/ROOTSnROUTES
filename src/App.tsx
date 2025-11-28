@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
 import Loading from './components/Loading';
+import LoginModal from './components/LoginModal';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
@@ -14,6 +15,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext';
+import { ImmersiveModeProvider } from './contexts/ImmersiveModeContext';
+import { LoginProvider, useLogin } from './contexts/LoginContext';
 import { initializePWA } from './utils/pwa';
 
 // Lazy load pages
@@ -52,6 +55,7 @@ const AITripPlannerPage = lazy(() => import('./pages/AITripPlannerPage'));
 const SmartWeatherPage = lazy(() => import('./pages/SmartWeatherPage'));
 const PredictiveBookingPage = lazy(() => import('./pages/PredictiveBookingPage'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Login = lazy(() => import('./pages/Login'));
 const GoogleAuthTestPage = lazy(() => import('./pages/GoogleAuthTestPage'));
 const ARVRPreviewPage = lazy(() => import('./pages/ARVRPreviewPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -73,6 +77,18 @@ const RedirectHandler = () => {
   return null;
 };
 
+// Component to render LoginModal inside Router context
+const LoginModalWrapper = () => {
+  const { isLoginOpen, hideLogin } = useLogin();
+  
+  return (
+    <LoginModal 
+      isOpen={isLoginOpen} 
+      onClose={hideLogin}
+    />
+  );
+};
+
 const App = () => {
   useEffect(() => {
     // Initialize PWA
@@ -84,8 +100,10 @@ const App = () => {
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <UserPreferencesProvider>
-              <AppErrorBoundary>
+            <LoginProvider>
+              <UserPreferencesProvider>
+                <ImmersiveModeProvider>
+                <AppErrorBoundary>
                 <Router 
                   future={{
                     v7_startTransition: true,
@@ -142,12 +160,14 @@ const App = () => {
                         <Route path="/report-issues" element={<Support />} />
                         <Route path="/profile" element={<UserProfile />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/login" element={<Login />} />
                         <Route path="/favorites" element={<Favorites />} />
                         <Route path="/my-bookings" element={<MyBookings />} />
                         <Route path="/google-auth-test" element={<GoogleAuthTestPage />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
+                    <LoginModalWrapper />
                   </div>
                 </Router>
               </AppErrorBoundary>
@@ -155,7 +175,9 @@ const App = () => {
               <PWAInstallPrompt />
               <OfflineIndicator />
               <Toaster />
-            </UserPreferencesProvider>
+                </ImmersiveModeProvider>
+              </UserPreferencesProvider>
+            </LoginProvider>
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>

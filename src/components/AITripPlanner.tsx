@@ -10,6 +10,8 @@ import { Calendar, Clock, MapPin, Users, Sparkles, Download, Share, Loader2, Clo
 import { useLanguage } from '@/hooks/useLanguage';
 import Groq from 'groq-sdk';
 import { weatherService } from '@/services/weatherService';
+import { sanitizeInput, validateApiKey, apiRateLimiter } from '@/utils/security';
+import { useBookingProtection } from '@/hooks/useBookingProtection';
 import type { WeatherData, WeatherForecast, WeatherSafety } from '@/services/weatherService';
 
 interface TripPreferences {
@@ -86,7 +88,34 @@ interface GeneratedItinerary {
 const AITripPlanner = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { handleProtectedBooking } = useBookingProtection({
+    customAuthMessage: {
+      title: "Sign In to Book Accommodations",
+      description: "Please sign in to proceed with booking your selected accommodations from the itinerary."
+    }
+  });
+  const [step, setStep] = useState(1);
+  const [stepTransitioning, setStepTransitioning] = useState(false);
   const [plannerMode, setPlannerMode] = useState<'simple' | 'detailed'>('simple'); // New: Toggle between modes
+
+  // Helper function to smoothly transition between steps
+  const goToStep = (newStep: number) => {
+    setStepTransitioning(true);
+    
+    // Short delay to show transition
+    setTimeout(() => {
+      setStep(newStep);
+      setStepTransitioning(false);
+      
+      // Scroll to top of the trip planner section smoothly
+      setTimeout(() => {
+        const element = document.querySelector('.ai-trip-planner-container') || 
+                       document.querySelector('main') || 
+                       document.body;
+        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }, 150);
+  };
   const [simpleTextInput, setSimpleTextInput] = useState(''); // New: For simple text-based planning
   const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]); // New: Selected districts
   const [travelOrder, setTravelOrder] = useState<'flexible' | 'specific'>('specific'); // New: Travel pattern (default to sequential)
@@ -108,7 +137,6 @@ const AITripPlanner = () => {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedItinerary, setGeneratedItinerary] = useState<GeneratedItinerary | null>(null);
-  const [step, setStep] = useState(1);
   
   // New: Weather-related state
   const [weatherData, setWeatherData] = useState<WeatherForecast | null>(null);
@@ -304,7 +332,7 @@ const AITripPlanner = () => {
       console.log('Using cached itinerary');
       setGeneratedItinerary(cachedResult);
       setIsGenerating(false);
-      setStep(3);
+      goToStep(3);
       return;
     }
     
@@ -610,7 +638,7 @@ If you answer NO to any of these, GO BACK and fix the itinerary!`;
       itineraryCache.set(cacheKey, aiItinerary as GeneratedItinerary);
       
       setGeneratedItinerary(aiItinerary as GeneratedItinerary);
-      setStep(3);
+      goToStep(3);
       
     } catch (error) {
       console.error('Error generating itinerary:', error);
@@ -643,8 +671,55 @@ If you answer NO to any of these, GO BACK and fix the itinerary!`;
   }, [preferences, selectedDistricts, travelOrder, startingPoint, itineraryCache]);
 
   // AI Trip Generation from Simple Text Input
+  // Function to validate if input text is meaningful
+  const validateTripInput = (text: string): { isValid: boolean; reason?: string } => {
+    const cleanText = sanitizeInput(text).toLowerCase();
+    
+    // Check minimum length
+    if (cleanText.length < 10) {
+      return { isValid: false, reason: "Please provide more details about your trip (at least 10 characters)" };
+    }
+    
+    // Check if text contains only random characters or repeated patterns
+    const randomPattern = /^[a-z]{6,}$/; // Only random letters
+    const repeatedPattern = /(.)\1{4,}/; // Same character repeated 5+ times
+    if (randomPattern.test(cleanText) || repeatedPattern.test(cleanText)) {
+      return { isValid: false, reason: "Please provide a meaningful description of your trip requirements" };
+    }
+    
+    // Check for travel-related keywords
+    const travelKeywords = [
+      'trip', 'visit', 'travel', 'tour', 'vacation', 'holiday', 'journey',
+      'day', 'days', 'week', 'weekend', 'month',
+      'budget', 'money', 'cost', 'price', 'expensive', 'cheap', 'affordable',
+      'family', 'friends', 'couple', 'solo', 'group',
+      'hotel', 'stay', 'accommodation', 'lodge', 'resort',
+      'food', 'restaurant', 'eat', 'lunch', 'dinner',
+      'nature', 'waterfall', 'temple', 'culture', 'adventure', 'wildlife',
+      'ranchi', 'jamshedpur', 'deoghar', 'netarhat', 'jharkhand',
+      'want', 'like', 'interested', 'plan', 'looking', 'need'
+    ];
+    
+    const hasKeywords = travelKeywords.some(keyword => cleanText.includes(keyword));
+    
+    // Check if text has basic sentence structure (spaces between words)
+    const wordCount = cleanText.split(/\s+/).length;
+    const hasSpaces = cleanText.includes(' ');
+    
+    if (!hasKeywords && (!hasSpaces || wordCount < 3)) {
+      return { 
+        isValid: false, 
+        reason: "Please describe your trip with details like duration, budget, interests, or places you want to visit" 
+      };
+    }
+    
+    return { isValid: true };
+  };
+
   const generateFromSimpleText = useCallback(async () => {
-    if (!simpleTextInput.trim()) {
+    const sanitizedInput = sanitizeInput(simpleTextInput);
+    
+    if (!sanitizedInput.trim()) {
       toast({
         title: "Input Required",
         description: "Please describe your trip requirements",
@@ -653,15 +728,44 @@ If you answer NO to any of these, GO BACK and fix the itinerary!`;
       return;
     }
 
+    // Validate input before processing
+    const validation = validateTripInput(sanitizedInput);
+    if (!validation.isValid) {
+      toast({
+        title: "Invalid Input",
+        description: validation.reason,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check rate limiting
+    const clientId = 'trip-planner-' + (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
+    if (!apiRateLimiter.isAllowed(clientId)) {
+      toast({
+        title: "Too Many Requests",
+        description: "Please wait a moment before generating another trip plan.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGenerating(true);
+    // Announce to screen readers via toast
+    toast({
+      title: "Generating Trip Plan", 
+      description: "AI is creating your personalized Jharkhand itinerary...",
+      duration: 2000
+    });
     
     try {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       
-      if (!apiKey || apiKey === 'your_groq_api_key_here' || apiKey.trim() === '') {
+      const apiValidation = validateApiKey(apiKey);
+      if (!apiValidation.isValid) {
         toast({
           title: "Configuration Required",
-          description: "Groq API key is not configured. Please add VITE_GROQ_API_KEY to your .env file.",
+          description: "Groq API key is not configured properly. Please check your environment configuration.",
           variant: "destructive",
           duration: 8000
         });
@@ -764,7 +868,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
       const aiItinerary = JSON.parse(responseContent);
       
       setGeneratedItinerary(aiItinerary as GeneratedItinerary);
-      setStep(3);
+      goToStep(3);
       
     } catch (error) {
       console.error('Error generating itinerary:', error);
@@ -932,6 +1036,18 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
     window.URL.revokeObjectURL(url);
   };
 
+  const handleBookAccommodations = () => {
+    handleProtectedBooking(() => {
+      // Proceed with accommodation booking
+      toast({
+        title: "Booking Accommodations",
+        description: "Redirecting to accommodation booking for your selected itinerary...",
+        duration: 3000
+      });
+      // Add actual booking logic here
+    });
+  };
+
   const shareItinerary = () => {
     if (!generatedItinerary) return;
     
@@ -982,12 +1098,12 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
       {[1, 2, 3].map((num) => (
         <React.Fragment key={num}>
           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-            step >= num ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+            step >= num ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
           }`}>
             {num}
           </div>
           {num < 3 && (
-            <div className={`w-16 h-1 ${step > num ? 'bg-primary' : 'bg-gray-200'}`} />
+            <div className={`w-16 h-1 ${step > num ? 'bg-primary' : 'bg-muted'}`} />
           )}
         </React.Fragment>
       ))}
@@ -996,57 +1112,65 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
 
   if (step === 1) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-3xl mx-auto">
         {renderStepIndicator()}
         
-        <Card className="shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
-              <Sparkles className="h-8 w-8 text-primary" />
+        {stepTransitioning ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">Preparing your trip planner...</p>
+            </div>
+          </div>
+        ) : (
+        <Card className="shadow-lg">{/* rest of step 1 content */}
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
               AI Trip Planner
             </CardTitle>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-base">
               Tell us your preferences, and our AI will create the perfect Jharkhand itinerary
             </p>
           </CardHeader>
           
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             {/* Mode Selection */}
-            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-6 rounded-lg border-2 border-emerald-200 dark:border-emerald-800">
-              <h3 className="text-lg font-semibold mb-4 text-center">Choose Your Planning Style</h3>
-              <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <h3 className="text-base font-semibold mb-3 text-center">Choose Your Planning Style</h3>
+              <div className="grid md:grid-cols-2 gap-3">
                 <button
                   onClick={() => setPlannerMode('simple')}
-                  className={`p-6 rounded-lg border-2 transition-all ${
+                  className={`p-4 rounded-lg border transition-all ${
                     plannerMode === 'simple'
-                      ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 shadow-lg scale-105'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-700'
+                      ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 shadow-md'
+                      : 'border-muted-foreground/30 hover:border-emerald-400 dark:hover:border-emerald-700'
                   }`}
                 >
-                  <div className="text-4xl mb-3">✍️</div>
-                  <h4 className="font-bold text-lg mb-2">Quick Text Input</h4>
+                  <div className="text-2xl mb-2">✍️</div>
+                  <h4 className="font-bold text-base mb-2">Quick Text Input</h4>
                   <p className="text-sm text-muted-foreground">
                     Just describe your trip in your own words. Our AI will understand and plan everything for you.
                   </p>
-                  <div className="mt-3 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                     Example: "3 day trip with family, budget friendly, want to see waterfalls"
                   </div>
                 </button>
 
                 <button
                   onClick={() => setPlannerMode('detailed')}
-                  className={`p-6 rounded-lg border-2 transition-all ${
+                  className={`p-4 rounded-lg border transition-all ${
                     plannerMode === 'detailed'
-                      ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 shadow-lg scale-105'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-700'
+                      ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 shadow-md'
+                      : 'border-muted-foreground/30 hover:border-emerald-400 dark:hover:border-emerald-700'
                   }`}
                 >
-                  <div className="text-4xl mb-3">📋</div>
-                  <h4 className="font-bold text-lg mb-2">Detailed Form</h4>
+                  <div className="text-2xl mb-2">📋</div>
+                  <h4 className="font-bold text-base mb-2">Detailed Form</h4>
                   <p className="text-sm text-muted-foreground">
                     Fill out a comprehensive form with specific options for duration, budget, interests, and more.
                   </p>
-                  <div className="mt-3 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                     More control over every aspect of your trip
                   </div>
                 </button>
@@ -1066,8 +1190,17 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                     value={simpleTextInput}
                     onChange={(e) => setSimpleTextInput(e.target.value)}
                     rows={8}
-                    className="resize-none"
+                    className={`resize-none ${
+                      simpleTextInput.trim() && !validateTripInput(simpleTextInput).isValid 
+                        ? 'border-red-500 focus:border-red-500' 
+                        : ''
+                    }`}
                   />
+                  {simpleTextInput.trim() && !validateTripInput(simpleTextInput).isValid && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {validateTripInput(simpleTextInput).reason}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-2">
                     💡 Tip: Include details like duration, budget, interests, places you want to visit, group size, and any special requirements
                   </p>
@@ -1076,12 +1209,22 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                 <Button 
                   onClick={generateFromSimpleText}
                   className="w-full py-6 text-lg"
-                  disabled={isGenerating || !simpleTextInput.trim()}
+                  disabled={isGenerating || !simpleTextInput.trim() || !validateTripInput(simpleTextInput).isValid}
                 >
                   {isGenerating ? (
                     <span className="flex items-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin" />
                       AI is planning your perfect trip...
+                    </span>
+                  ) : !simpleTextInput.trim() ? (
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Please describe your trip above
+                    </span>
+                  ) : !validateTripInput(simpleTextInput).isValid ? (
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Please provide a meaningful trip description
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
@@ -1095,43 +1238,62 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
 
             {/* Detailed Form Mode */}
             {plannerMode === 'detailed' && (
-              <>
-            <p className="text-xs text-muted-foreground text-center">
-              Fields marked with <span className="text-red-500 font-semibold">*</span> are required
-            </p>
+              <div className="space-y-6">
+                <div className="bg-muted/30 border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
+                    <span className="text-red-500">*</span>
+                    <span>Required fields</span>
+                    <span className="text-muted-foreground/60">|</span>
+                    <span className="text-emerald-600">📍 Weather integration enabled</span>
+                  </p>
+                </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  Trip Start Date
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <Input
-                  type="date"
-                  value={preferences.startDate}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setPreferences(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full"
-                  required
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  📍 Required for weather-based planning
-                </p>
-              </div>
+                {/* Basic Trip Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    Trip Details
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        Trip Start Date
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Input
+                        type="date"
+                        value={preferences.startDate}
+                        min={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => setPreferences(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="w-full bg-background text-foreground border-input focus:border-primary focus:ring-primary [&::-webkit-datetime-edit]:text-foreground [&::-webkit-datetime-edit]:bg-transparent [&::-webkit-datetime-edit-text]:text-foreground [&::-webkit-datetime-edit-month-field]:text-foreground [&::-webkit-datetime-edit-day-field]:text-foreground [&::-webkit-datetime-edit-year-field]:text-foreground [&::-webkit-datetime-edit-fields-wrapper]:text-foreground [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:brightness-100 dark:[&::-webkit-calendar-picker-indicator]:invert-0"
+                        required
+                        placeholder="mm/dd/yyyy"
+                        style={{ 
+                          colorScheme: 'dark light',
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'textfield'
+                        }}
+                      />
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <span>📍</span> Required for weather-based planning
+                      </p>
+                    </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Trip Duration
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <Select value={preferences.duration} onValueChange={(value) => 
-                  setPreferences(prev => ({ ...prev, duration: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select duration *" />
-                  </SelectTrigger>
-                  <SelectContent>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        Trip Duration
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Select value={preferences.duration} onValueChange={(value) => 
+                        setPreferences(prev => ({ ...prev, duration: value }))
+                      }>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select duration" />
+                        </SelectTrigger>
+                        <SelectContent>
                     <SelectItem value="2">2 Days</SelectItem>
                     <SelectItem value="3">3 Days</SelectItem>
                     <SelectItem value="4">4 Days</SelectItem>
@@ -1154,9 +1316,9 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                     <SelectValue placeholder="Select budget *" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="budget">Budget (₹2,000-5,000/day)</SelectItem>
-                    <SelectItem value="mid-range">Mid-range (₹5,000-10,000/day)</SelectItem>
-                    <SelectItem value="luxury">Luxury (₹10,000+/day)</SelectItem>
+                    <SelectItem value="budget">💵 Budget (₹2,000-5,000/day)</SelectItem>
+                    <SelectItem value="mid-range">💳 Mid-range (₹5,000-10,000/day)</SelectItem>
+                    <SelectItem value="luxury">💎 Luxury (₹10,000+/day)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1253,17 +1415,17 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             </div>
 
             {/* District Selection */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" />
-                <label className="text-sm font-medium">
+                <label className="text-base font-semibold">
                   Select Districts to Visit
-                  <span className="text-xs text-muted-foreground ml-2">(Click in order of visit)</span>
+                  <span className="text-sm text-muted-foreground ml-2 font-normal">(Click in order of visit)</span>
                 </label>
               </div>
               
-              <div className="border rounded-lg p-4 bg-muted/30 max-h-64 overflow-y-auto">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="border border-border rounded-lg p-6 bg-card shadow-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {[
                     'Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar', 'Hazaribagh',
                     'Giridih', 'Dumka', 'Palamu', 'Ramgarh', 'Netarhat', 'Khunti',
@@ -1283,22 +1445,17 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                             setSelectedDistricts([...selectedDistricts, district]);
                           }
                         }}
-                        className={`
-                          px-3 py-2 rounded-md text-sm font-medium transition-all text-left
-                          ${isSelected 
-                            ? 'bg-primary text-white shadow-md' 
-                            : 'bg-background hover:bg-muted border border-input'
-                          }
-                        `}
+                        className={`relative px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-center min-h-[60px] flex flex-col items-center justify-center shadow-sm border-2 ${isSelected 
+                            ? 'bg-primary text-primary-foreground border-primary shadow-md transform scale-105' 
+                            : 'bg-background hover:bg-muted/50 border-border hover:border-primary/30 hover:shadow-md'
+                          }`}
                       >
-                        <div className="flex items-center gap-2">
-                          {isSelected && (
-                            <span className="bg-white text-primary rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                              {selectedIndex + 1}
-                            </span>
-                          )}
-                          <span className={isSelected ? '' : 'ml-7'}>{district}</span>
-                        </div>
+                        {isSelected && (
+                          <div className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md border-2 border-background">
+                            {selectedIndex + 1}
+                          </div>
+                        )}
+                        <span className="leading-tight">{district}</span>
                       </button>
                     );
                   })}
@@ -1313,8 +1470,8 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                   <div className="flex items-center gap-2 flex-wrap">
                     {selectedDistricts.map((district, idx) => (
                       <React.Fragment key={district}>
-                        <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md border border-emerald-200 dark:border-emerald-700">
-                          <span className="bg-emerald-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                        <div className="flex items-center gap-2 bg-background dark:bg-muted px-3 py-1.5 rounded-md border border-emerald-200 dark:border-emerald-700">
+                          <span className="bg-emerald-600 text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                             {idx + 1}
                           </span>
                           <span className="text-sm font-medium">{district}</span>
@@ -1378,32 +1535,41 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                 </div>
               </div>
             )}
+            </div>
+            </div>
+            )}
 
+            {/* Next Step Button - Only show in detailed mode or simple mode without generate */}
+            {plannerMode === 'detailed' && (
             <Button 
               onClick={() => setStep(2)}
               className="w-full py-3 text-lg"
-              disabled={!preferences.duration || !preferences.budget || !preferences.groupSize || !preferences.startDate}
+              disabled={
+                plannerMode === 'simple' 
+                  ? !simpleTextInput.trim()
+                  : (!preferences.duration || !preferences.budget || !preferences.groupSize || !preferences.startDate)
+              }
             >
-              {(!preferences.duration || !preferences.budget || !preferences.groupSize || !preferences.startDate) ? (
+              {(plannerMode === 'simple' ? !simpleTextInput.trim() : (!preferences.duration || !preferences.budget || !preferences.groupSize || !preferences.startDate)) ? (
                 <span className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
-                  Please fill all required fields (*)
+                  {plannerMode === 'simple' ? 'Please describe your trip above' : 'Please fill all required fields (*)'}
                 </span>
               ) : (
                 'Next: Review Preferences'
               )}
             </Button>
-            </>
             )}
           </CardContent>
         </Card>
+        )}
       </div>
     );
   }
 
   if (step === 2) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto">
         {renderStepIndicator()}
         
         <Card className="shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
@@ -1467,10 +1633,10 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                     {selectedDistricts.map((district, idx) => (
                       <React.Fragment key={district}>
                         <div className="flex items-center gap-2">
-                          <div className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                          <div className="bg-emerald-600 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                             {idx + 1}
                           </div>
-                          <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-700">
+                          <div className="bg-background dark:bg-muted px-4 py-2 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-700">
                             <p className="font-bold text-emerald-800 dark:text-emerald-200">{district}</p>
                             {idx === 0 && (
                               <p className="text-xs text-emerald-600 dark:text-emerald-400">Starting Point</p>
@@ -1483,7 +1649,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                       </React.Fragment>
                     ))}
                   </div>
-                  <div className="mt-4 p-3 bg-white/50 dark:bg-gray-800/50 rounded-md">
+                  <div className="mt-4 p-3 bg-muted/50 rounded-md">
                     <p className="text-sm">
                       <strong>Travel Pattern:</strong> {
                         travelOrder === 'specific' ? '� Follow My Order - Visit districts in the exact sequence selected' :
@@ -1554,9 +1720,9 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
 
             {/* Weather Forecast Display */}
             {preferences.startDate && (
-              <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="space-y-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                 <div className="flex items-center gap-2 mb-3">
-                  <Cloud className="h-5 w-5 text-blue-600" />
+                  <Cloud className="h-5 w-5 text-emerald-600" />
                   <h3 className="font-semibold text-lg">Weather Forecast</h3>
                 </div>
                 
@@ -1581,7 +1747,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {weatherData.daily.slice(0, parseInt(preferences.duration) || 5).map((day, idx) => (
-                        <div key={idx} className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm">
+                        <div key={idx} className="bg-background dark:bg-muted p-3 rounded-lg shadow-sm">
                           <p className="text-xs font-medium text-muted-foreground mb-1">Day {idx + 1}</p>
                           <div className="flex items-center gap-2 mb-2">
                             {day.condition.toLowerCase().includes('rain') ? (
@@ -1621,7 +1787,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
             )}
 
             <div className="flex gap-4">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+              <Button variant="outline" onClick={() => goToStep(1)} className="flex-1">
                 Refine choices
               </Button>
               <Button 
@@ -1651,10 +1817,10 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
   // Step 3: Generated Itinerary Display
   if (step === 3 && generatedItinerary) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto">
         {renderStepIndicator()}
         
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Header */}
           <Card className="shadow-lg">
             <CardHeader>
@@ -1698,7 +1864,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                 <CardHeader className="space-y-4">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-xl font-bold flex items-center gap-2">
-                      <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
+                      <span className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center text-sm">
                         {day.day}
                       </span>
                       {day.title}
@@ -1930,7 +2096,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
                     const highUV = (dayWeather.uvIndex || 0) > 7;
                     
                     return (
-                      <div key={idx} className="bg-white/70 dark:bg-gray-800/70 p-5 rounded-lg border-2 border-purple-200 dark:border-purple-700 hover:shadow-lg transition-shadow">
+                      <div key={idx} className="bg-background/70 dark:bg-muted/70 p-5 rounded-lg border-2 border-emerald-200 dark:border-emerald-700 hover:shadow-lg transition-shadow">
                         {/* Day Header */}
                         <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-200 dark:border-purple-700">
                           <div className="flex items-center gap-3">
@@ -2200,7 +2366,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {weatherData.daily.slice(0, parseInt(preferences.duration) || 5).map((day, idx) => (
-                    <div key={idx} className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm text-center">
+                    <div key={idx} className="bg-background dark:bg-muted p-3 rounded-lg shadow-sm text-center">
                       <p className="text-sm font-medium mb-2">Day {idx + 1}</p>
                       <div className="flex justify-center mb-2">
                         {day.condition.toLowerCase().includes('rain') ? (
@@ -2221,14 +2387,18 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanations.`;
           )}
 
           {/* Actions */}
-          <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={() => setStep(1)}>
-              Plan Another Trip
-            </Button>
-            <Button>
-              Book Selected Accommodations
-            </Button>
-          </div>
+          <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Button variant="outline" size="lg" onClick={() => goToStep(1)}>
+                  Plan Another Trip
+                </Button>
+                <Button size="lg" onClick={handleBookAccommodations}>
+                  Book Selected Accommodations
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

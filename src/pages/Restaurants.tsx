@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1317,6 +1318,17 @@ const Restaurants = () => {
           </div>
         </div>
       </section>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/explore"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Find Nearby Stays", path: "/stays", icon: MapPin },
+          { label: "Plan Food Tour", path: "/ai-trip-planner", icon: ChefHat },
+          { label: "Book Transport", path: "/transport", icon: Phone }
+        ]}
+      />
 
       <Footer />
     </>

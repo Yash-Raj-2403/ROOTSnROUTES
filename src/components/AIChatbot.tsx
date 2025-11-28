@@ -276,15 +276,15 @@ const AIChatbot = () => {
     <div className="fixed bottom-6 right-6 z-50">
       <Card className={`w-96 shadow-2xl transition-all duration-300 chatbot-container ${chatState.isMinimized ? 'h-16' : 'h-[600px]'}`}>
         {/* Header */}
-        <CardHeader className="p-4 border-b bg-primary text-white rounded-t-lg chatbot-header">
+        <CardHeader className="p-4 border-b bg-primary text-primary-foreground rounded-t-lg chatbot-header">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
                 <Bot className="h-5 w-5" />
               </div>
               <div>
                 <CardTitle className="text-lg">Jharkhand AI Assistant</CardTitle>
-                <p className="text-sm text-white/80">Always here to help</p>
+                <p className="text-sm text-primary-foreground/80">Always here to help</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -292,7 +292,7 @@ const AIChatbot = () => {
                 variant="ghost"
                 size="sm"
                 onClick={toggleMinimize}
-                className="text-white hover:bg-white/20"
+                className="text-primary-foreground hover:bg-primary-foreground/20"
               >
                 {chatState.isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
               </Button>
@@ -300,7 +300,7 @@ const AIChatbot = () => {
                 variant="ghost"
                 size="sm"
                 onClick={closeChat}
-                className="text-white hover:bg-white/20"
+                className="text-primary-foreground hover:bg-primary-foreground/20"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -345,7 +345,7 @@ const AIChatbot = () => {
                   <div className={`max-w-[80%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                     <div className={`p-3 rounded-lg ${
                       message.type === 'user' 
-                        ? 'bg-primary text-white chatbot-user-message' 
+                        ? 'bg-primary text-primary-foreground chatbot-user-message' 
                         : 'bg-muted text-foreground chatbot-bot-message'
                     }`}>
                       <div className="flex items-start gap-2">

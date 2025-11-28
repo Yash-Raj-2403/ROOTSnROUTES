@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QRCodeSVG } from 'qrcode.react';
+import { useImmersiveMode } from '@/contexts/ImmersiveModeContext';
 import { 
   Eye, 
   Camera, 
@@ -46,6 +47,7 @@ interface ExploreARVRSimpleProps {
 }
 
 const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all', destinationName, onBack }) => {
+  const { setImmersiveMode, setImmersiveModeType } = useImmersiveMode();
   const [isVRActive, setIsVRActive] = useState(false);
   const [isARActive, setIsARActive] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -135,11 +137,15 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
         if (modelViewer && typeof modelViewer.dismissAR === 'function') {
           modelViewer.dismissAR();
         }
+        
+        // Reset immersive mode context
+        setImmersiveMode(false);
+        setImmersiveModeType(null);
       } catch (error) {
         console.error('❌ Cleanup error:', error);
       }
     };
-  }, []);
+  }, [setImmersiveMode, setImmersiveModeType]);
 
   // Monitor VR scene readiness
   useEffect(() => {
@@ -173,11 +179,13 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
       const isMobile = navigator.userAgent.match(/Mobile|Android|iPhone|iPad/);
       if (isMobile) {
         setTimeout(() => {
+          // Notify immersive mode context
+          setImmersiveModeType('ar');
           setIsARActive(true);
         }, 1000); // Small delay to ensure everything is loaded
       }
     }
-  }, [aframeLoaded]);
+  }, [aframeLoaded, setImmersiveModeType]);
 
   // Handle keyboard escape to exit immersive mode
   useEffect(() => {
@@ -205,6 +213,9 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
     console.log('🏷️  Title:', exp.title);
     console.log('📸 Panorama URL:', exp.panoramaUrl);
     console.log('🎨 Category:', exp.category);
+    
+    // Notify immersive mode context
+    setImmersiveModeType('vr');
     setIsVRActive(true);
   };
 
@@ -225,6 +236,8 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
     
     if (isMobile) {
       console.log('📱 Mobile device detected - launching AR directly');
+      // Notify immersive mode context
+      setImmersiveModeType('ar');
       setIsARActive(true);
     } else {
       console.log('💻 Desktop detected - showing QR code');
@@ -260,6 +273,10 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
         }
       }
       
+      // Notify immersive mode context that we're exiting
+      setImmersiveMode(false);
+      setImmersiveModeType(null);
+      
       // Reset all states
       setIsVRActive(false);
       setIsARActive(false);
@@ -284,6 +301,8 @@ const ExploreARVRSimple: React.FC<ExploreARVRSimpleProps> = ({ category = 'all',
     } catch (error) {
       console.error('❌ Error during exit:', error);
       // Force reset states even if cleanup fails
+      setImmersiveMode(false);
+      setImmersiveModeType(null);
       setIsVRActive(false);
       setIsARActive(false);
       setShowQRModal(false);

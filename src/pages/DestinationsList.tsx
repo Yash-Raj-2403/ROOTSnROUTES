@@ -3,6 +3,8 @@ import { districtsData } from '../data/newDistrictsData';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DevelopmentNotice from '@/components/DevelopmentNotice';
+import { NavigationButtons } from '@/components/NavigationButtons';
+import { MapPin, Calendar, Users } from 'lucide-react';
 
 const DestinationsList = () => {
   const districts = ['Khunti', 'Kodarma', 'Latehar', 'Lohardaga'];
@@ -103,6 +105,18 @@ const DestinationsList = () => {
         </ul>
         </div>
       </div>
+      
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/destinations"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Explore All Destinations", path: "/destinations", icon: MapPin },
+          { label: "Plan Your Trip", path: "/ai-trip-planner", icon: Calendar },
+          { label: "View Districts", path: "/districts", icon: Users }
+        ]}
+      />
+      
       <Footer />
     </>
   );

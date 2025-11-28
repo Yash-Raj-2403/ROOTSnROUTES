@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
+import { BackToServices } from "@/components/NavigationButtons";
 import EmergencyDialer from "@/components/EmergencyDialer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -349,6 +350,13 @@ const Support = () => {
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Navigation Actions */}
+      <section className="py-12 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <BackToServices />
         </div>
       </section>
 

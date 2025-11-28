@@ -15,6 +15,7 @@ import {
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Loading from '@/components/Loading';
+import { ProfileNavigation } from '@/components/NavigationButtons';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -537,6 +538,11 @@ const Favorites = () => {
               </AnimatePresence>
             </div>
           )}
+
+          {/* Continue Exploring Section */}
+          <div className="mt-12">
+            <ProfileNavigation />
+          </div>
         </div>
       </div>
       <Footer />

@@ -4,9 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ROOTSnROUTES - AI-Powered Eco-Tourism Platform for Jharkhand</title>
+    
+    <!-- Enhanced Meta Tags -->
     <meta name="description" content="Discover Jharkhand's hidden gems through AI-powered eco-tourism. Explore authentic destinations, book homestays, and connect with local artisans for sustainable travel experiences." />
     <meta name="author" content="ROOTSnROUTES" />
     <meta name="keywords" content="Jharkhand tourism, eco-tourism, AI travel assistant, homestays, tribal culture, sustainable tourism, Hundru Falls, Betla National Park, Baidyanath Dham" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://aframe.io https://ajax.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https: wss:; media-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
 
     <!-- Favicon and App Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
@@ -33,6 +44,32 @@
     
     <!-- Model Viewer for AR -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TravelAgency",
+      "name": "ROOTSnROUTES",
+      "description": "AI-Powered Eco-Tourism Platform for Jharkhand",
+      "url": "https://rootsnroutes.com",
+      "logo": "https://rootsnroutes.com/apple-touch-icon.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": ["English", "Hindi"]
+      },
+      "areaServed": {
+        "@type": "State",
+        "name": "Jharkhand",
+        "containedInPlace": {
+          "@type": "Country",
+          "name": "India"
+        }
+      },
+      "serviceType": ["Tourism", "Travel Planning", "Accommodation Booking", "Cultural Tours"]
+    }
+    </script>
   </head>
 
   <body>

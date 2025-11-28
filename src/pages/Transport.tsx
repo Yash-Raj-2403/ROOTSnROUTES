@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -148,7 +149,7 @@ const Transport = () => {
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-hero">
         <div className="container mx-auto px-6">
-          <div className="text-center text-white">
+          <div className="text-center text-primary-foreground">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">{t('transport.title')}</h1>
             <p className="text-xl mb-8 max-w-4xl mx-auto">
               {t('transport.description')}
@@ -183,16 +184,6 @@ const Transport = () => {
               placeholder="Search routes, services..."
               className="h-12 text-lg bg-card border-border"
             />
-          </div>
-
-          {/* Filter Tags */}
-          <div className="flex flex-wrap gap-2 mb-8 justify-center">
-            <Badge variant="secondary">All Transport Types</Badge>
-            <Badge variant="outline">All</Badge>
-            <Badge variant="outline">Bus</Badge>
-            <Badge variant="outline">Taxi</Badge>
-            <Badge variant="outline">Train</Badge>
-            <Badge variant="outline">Auto-rickshaw</Badge>
           </div>
         </div>
       </section>

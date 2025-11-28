@@ -237,7 +237,7 @@ const WeatherDashboard: React.FC = () => {
         )}
 
         {/* Footer Info */}
-        <Card className="mt-8 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+        <Card className="mt-8 bg-gradient-to-r from-emerald-600 to-teal-600 text-primary-foreground">
           <CardContent className="p-6 text-center">
             <h3 className="text-xl font-bold mb-2">🎯 Smart Travel Planning</h3>
             <p className="text-emerald-100">

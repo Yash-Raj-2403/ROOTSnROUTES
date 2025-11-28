@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +11,20 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { authenticStays, generateStayId } from "@/data/stayData";
+import { useBookingProtection } from "@/hooks/useBookingProtection";
+import { useToast } from "@/components/ui/use-toast";
 import santhaliHome from "@/assets/santhali-home.jpg";
 import ecoLodge from "@/assets/eco-lodge.jpg";
 
 const AuthenticStays = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const { handleProtectedBooking } = useBookingProtection({
+    customAuthMessage: {
+      title: "Sign In to Book Your Stay",
+      description: "Please sign in to book this authentic stay experience. You'll be able to continue your booking after signing in."
+    }
+  });
   const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedRating, setSelectedRating] = useState("all");
@@ -22,6 +32,21 @@ const AuthenticStays = () => {
   const [includeHidden, setIncludeHidden] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+  // Handle booking with authentication protection
+  const handleBookNow = (stay: any, event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent Link navigation
+    event.stopPropagation();
+    handleProtectedBooking(() => {
+      // Proceed with booking logic here
+      toast({
+        title: "Booking Initiated",
+        description: `Starting booking process for ${stay.name}`,
+        duration: 3000
+      });
+      // Add actual booking logic here
+    });
+  };
 
   const authenticStays = [
     {
@@ -1474,7 +1499,7 @@ const AuthenticStays = () => {
       </section>
 
       {/* Authentic Stays Grid */}
-      <section className="py-20 bg-gradient-subtle">
+      <section className="py-20 bg-black">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredStays.map((stay) => {
@@ -1576,7 +1601,10 @@ const AuthenticStays = () => {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button className="flex-1 group text-sm">
+                        <Button 
+                          className="flex-1 group text-sm"
+                          onClick={(e) => handleBookNow(stay, e)}
+                        >
                           Book Now
                           <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -1746,6 +1774,17 @@ const AuthenticStays = () => {
           </Card>
         </div>
       </section>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/explore"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Book Now", path: "/predictive-booking", icon: Users },
+          { label: "Find Restaurants", path: "/restaurants", icon: UtensilsCrossed },
+          { label: "Check Transport", path: "/transport", icon: MapPin }
+        ]}
+      />
 
       <Footer />
     </>

@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -328,14 +329,21 @@ const MarketplaceDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Back Button */}
+        {/* Navigation Actions */}
         <div className="mt-8">
-          <Link to="/marketplace">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Marketplace
-            </Button>
-          </Link>
+          <NavigationButtons 
+            showBackButton
+            customBackPath="/marketplace"
+            showRelatedActions
+            relatedActions={[
+              { label: "More Products", path: "/marketplace", icon: ShoppingBag },
+              { label: "Local Crafts", path: "/handicrafts", icon: Award },
+              { label: "Find Stays", path: "/stays", icon: Heart },
+              { label: "Local Food", path: "/restaurants", icon: MapPin },
+              { label: "Plan Trip", path: "/ai-trip-planner", icon: Camera },
+              { label: "My Favorites", path: "/favorites", icon: Heart },
+            ]}
+          />
         </div>
       </div>
 

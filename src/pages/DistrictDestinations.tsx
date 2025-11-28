@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -298,6 +299,18 @@ const DistrictDestinations = () => {
           </div>
         </div>
       </main>
+      
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/districts"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "All Destinations", path: "/destinations", icon: MapPin },
+          { label: "Plan Trip", path: "/ai-trip-planner", icon: Calendar },
+          { label: "Find Nearby Hotels", path: "/stays", icon: Users }
+        ]}
+      />
+      
       <Footer />
     </>
   );

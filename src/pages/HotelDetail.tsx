@@ -8,12 +8,21 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { generateGoogleMapsUrl, generateDirectionsUrl, formatLocationString, getDistrictCoordinates } from "@/utils/googleMaps";
 import { authenticStays, findStayById, Stay } from "@/data/stayData";
+import { useBookingProtection } from "@/hooks/useBookingProtection";
+import { useToast } from "@/components/ui/use-toast";
 
 const HotelDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [hotel, setHotel] = useState<Stay | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const { toast } = useToast();
+  const { handleProtectedBooking } = useBookingProtection({
+    customAuthMessage: {
+      title: "Sign In to Book Your Stay",
+      description: "Please sign in to book this accommodation. You'll be able to continue your booking after signing in."
+    }
+  });
 
   useEffect(() => {
     if (id) {
@@ -22,6 +31,43 @@ const HotelDetail = () => {
     }
     setLoading(false);
   }, [id]);
+
+  // Handle booking with authentication protection
+  const handleBookNow = () => {
+    handleProtectedBooking(() => {
+      // Proceed with booking logic here
+      toast({
+        title: "Booking Initiated",
+        description: `Starting booking process for ${hotel?.name}`,
+        duration: 3000
+      });
+      // Add actual booking logic here
+    });
+  };
+
+  const handleCheckAvailability = () => {
+    handleProtectedBooking(() => {
+      // Proceed with availability check
+      toast({
+        title: "Checking Availability",
+        description: `Checking availability for ${hotel?.name}`,
+        duration: 3000
+      });
+      // Add actual availability check logic here
+    });
+  };
+
+  const handleSelectRoom = (roomType: any) => {
+    handleProtectedBooking(() => {
+      // Proceed with room selection
+      toast({
+        title: "Room Selected",
+        description: `Selected ${roomType.name} for ${roomType.price}/night`,
+        duration: 3000
+      });
+      // Add actual room selection logic here
+    });
+  };
 
   if (loading) {
     return (
@@ -258,11 +304,11 @@ const HotelDetail = () => {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button size="lg" className="w-full">
+              <Button size="lg" className="w-full" onClick={handleBookNow}>
                 <Phone className="w-5 h-5 mr-2" />
                 Book Now
               </Button>
-              <Button variant="outline" size="lg" className="w-full">
+              <Button variant="outline" size="lg" className="w-full" onClick={handleCheckAvailability}>
                 <Users className="w-5 h-5 mr-2" />
                 Check Availability
               </Button>
@@ -287,7 +333,12 @@ const HotelDetail = () => {
                     <span className="font-bold text-primary">{room.price}/night</span>
                   </div>
                   <p className="text-sm text-muted-foreground">{room.description}</p>
-                  <Button variant="outline" className="w-full mt-3" size="sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-3" 
+                    size="sm"
+                    onClick={() => handleSelectRoom(room)}
+                  >
                     Select Room
                   </Button>
                 </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import LeafletMap from '@/components/LeafletMap';
+import { NavigationButtons } from '@/components/NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft, MapPin, Navigation, Globe } from 'lucide-react';
@@ -110,6 +111,18 @@ const ExploreDistricts = () => {
         </div>
       </div>
       </div>
+      
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/explore"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "All Destinations", path: "/destinations", icon: MapPin },
+          { label: "Plan Trip", path: "/ai-trip-planner", icon: Navigation },
+          { label: "Transport Info", path: "/transport", icon: Globe }
+        ]}
+      />
+      
       <Footer />
     </>
   );

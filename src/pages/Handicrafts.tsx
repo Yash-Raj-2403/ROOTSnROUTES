@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -298,6 +299,18 @@ const Handicrafts = () => {
           </Card>
         </div>
       </main>
+      
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/marketplace"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Visit Marketplace", path: "/marketplace", icon: ShoppingBag },
+          { label: "Cultural Heritage", path: "/cultural-heritage", icon: Heart },
+          { label: "Plan Artisan Tour", path: "/ai-trip-planner", icon: MapPin }
+        ]}
+      />
+      
       <Footer />
     </div>
   );

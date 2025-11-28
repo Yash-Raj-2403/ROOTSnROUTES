@@ -21,6 +21,7 @@ import {
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Loading from '@/components/Loading';
+import { ProfileNavigation } from '@/components/NavigationButtons';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -536,12 +537,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 <div className="relative">
                   <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                     <AvatarImage src={userAvatar} alt={userName} />
-                    <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary to-accent text-white">
+                    <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary to-accent text-primary-foreground">
                       {getInitials(userName)}
                     </AvatarFallback>
                   </Avatar>
                   {userProfile && (
-                    <div className={`absolute -bottom-2 -right-2 p-2 rounded-full text-white ${getMemberLevelColor(userProfile.member_level)}`}>
+                    <div className={`absolute -bottom-2 -right-2 p-2 rounded-full text-primary-foreground ${getMemberLevelColor(userProfile.member_level)}`}>
                       {getMemberLevelIcon(userProfile.member_level)}
                     </div>
                   )}
@@ -920,7 +921,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                                       <Star
                                         key={i}
                                         className={`w-4 h-4 ${
-                                          i < review.rating ? 'fill-current text-yellow-500' : 'text-gray-300'
+                                          i < review.rating ? 'fill-current text-yellow-500' : 'text-muted-foreground'
                                         }`}
                                       />
                                     ))}
@@ -1148,6 +1149,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Continue Exploring Section */}
+          <div className="mt-12">
+            <ProfileNavigation />
+          </div>
         </div>
       </div>
       <Footer />

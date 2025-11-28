@@ -9,6 +9,7 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
+    hmr: false, // Disable HMR to troubleshoot auto-refresh
   },
   preview: {
     port: 8080,
@@ -19,6 +20,7 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
       'three-dev': 'three'
     },
+    dedupe: ['react', 'react-dom', 'three'], // Deduplicate React and Three.js
   },
   build: {
     rollupOptions: {

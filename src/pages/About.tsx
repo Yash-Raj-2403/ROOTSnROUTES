@@ -1,12 +1,13 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DevelopmentNotice from "@/components/DevelopmentNotice";
+import { NavigationButtons } from "@/components/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import TeamMember from "@/components/TeamMember";
 import FAQ from "@/components/FAQ";
 import { motion, useReducedMotion } from "framer-motion";
-import { Zap, Shield, Leaf, Users, Heart, Award, Globe, TreePine } from "lucide-react";
+import { Zap, Shield, Leaf, Users, Heart, Award, Globe, TreePine, MapPin, Car, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import hundruFalls from "@/assets/hundru-falls.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -602,6 +603,17 @@ const About = () => {
           </Card>
         </div>
       </section>
+
+      <NavigationButtons
+        showBackButton={true}
+        customBackPath="/"
+        showRelatedActions={true}
+        relatedActions={[
+          { label: "Explore Destinations", path: "/destinations", icon: MapPin },
+          { label: "Our Services", path: "/services", icon: Car },
+          { label: "Plan Your Trip", path: "/ai-trip-planner", icon: Sparkles }
+        ]}
+      />
 
       <Footer />
     </main>

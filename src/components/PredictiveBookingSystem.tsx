@@ -13,6 +13,8 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useToast } from './ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLogin } from '@/contexts/LoginContext';
+import BlockchainPayment from './BlockchainPayment';
 
 interface UserProfile {
   interests: string[];
@@ -61,6 +63,7 @@ const PredictiveBookingSystem = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showLogin } = useLogin();
   const [userProfile, setUserProfile] = useState<UserProfile>({
     interests: ['Nature', 'Culture', 'Photography'],
     budget: 'mid-range',
@@ -83,6 +86,8 @@ const PredictiveBookingSystem = () => {
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
   const [numberOfGuests, setNumberOfGuests] = useState('2');
+  const [useBlockchainPayment, setUseBlockchainPayment] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<'details' | 'payment'>('details');
 
   // Mock ML prediction algorithm
   const generatePredictiveRecommendations = async (): Promise<PredictiveRecommendation[]> => {
@@ -309,11 +314,11 @@ const PredictiveBookingSystem = () => {
     if (!user) {
       toast({
         title: "Sign In Required",
-        description: "Please sign in to make a booking",
-        variant: "destructive",
+        description: "Please sign in to make a booking. You'll be able to continue your booking after signing in.",
+        variant: "default",
         duration: 4000
       });
-      navigate('/login', { state: { from: '/predictive-booking' } });
+      showLogin('/predictive-booking');
       return;
     }
     
@@ -790,6 +795,38 @@ const PredictiveBookingSystem = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Payment Method</label>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="traditional"
+                        name="payment"
+                        checked={!useBlockchainPayment}
+                        onChange={() => setUseBlockchainPayment(false)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <label htmlFor="traditional" className="text-sm">
+                        Traditional Payment (Credit/Debit Card, UPI)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="blockchain"
+                        name="payment"
+                        checked={useBlockchainPayment}
+                        onChange={() => setUseBlockchainPayment(true)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <label htmlFor="blockchain" className="text-sm">
+                        Blockchain Payment (Secure & Transparent)
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -801,21 +838,151 @@ const PredictiveBookingSystem = () => {
                     setCheckInDate('');
                     setCheckOutDate('');
                     setNumberOfGuests('2');
+                    setUseBlockchainPayment(false);
+                    setPaymentStep('details');
                   }}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  className="flex-1" 
-                  onClick={confirmBooking}
-                  disabled={!checkInDate || !checkOutDate}
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  {checkInDate && checkOutDate ? 'Proceed to Book' : 'Select Dates First'}
-                </Button>
+                {paymentStep === 'details' ? (
+                  <Button 
+                    className="flex-1" 
+                    onClick={() => {
+                      if (!checkInDate || !checkOutDate) {
+                        toast({
+                          title: "Missing Information",
+                          description: "Please select both check-in and check-out dates",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      if (new Date(checkOutDate) <= new Date(checkInDate)) {
+                        toast({
+                          title: "Invalid Dates",
+                          description: "Check-out date must be after check-in date",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      setPaymentStep('payment');
+                    }}
+                    disabled={!checkInDate || !checkOutDate}
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Proceed to Payment
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setPaymentStep('details')}
+                  >
+                    Back to Details
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Blockchain Payment Modal */}
+      {showBookingModal && selectedBooking && paymentStep === 'payment' && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {useBlockchainPayment ? (
+              <BlockchainPayment
+                vendorId={`vendor_${selectedBooking.id}`}
+                vendorName={selectedBooking.name}
+                amount={parseInt(selectedBooking.price.replace(/[^\d]/g, ''))}
+                description={`${selectedBooking.type} booking - ${selectedBooking.name}`}
+                onPaymentComplete={(transaction) => {
+                  // Process blockchain payment completion
+                  const newBooking = {
+                    id: `BK${Date.now()}`,
+                    type: selectedBooking.type,
+                    name: selectedBooking.name,
+                    location: selectedBooking.location,
+                    date: checkInDate,
+                    checkInDate: checkInDate,
+                    checkOutDate: checkOutDate,
+                    nights: Math.ceil((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24)),
+                    guests: parseInt(numberOfGuests),
+                    price: selectedBooking.price,
+                    status: 'confirmed' as const,
+                    bookingDate: new Date().toISOString(),
+                    confirmationCode: `RR${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+                    image: selectedBooking.image,
+                    contactPhone: '+91-1234567890',
+                    contactEmail: 'rootsnroutesofficial@gmail.com',
+                    paymentMethod: 'blockchain',
+                    transactionId: transaction.id
+                  };
+
+                  const existingBookings = JSON.parse(localStorage.getItem(`bookings_${user?.id}`) || '[]');
+                  existingBookings.push(newBooking);
+                  localStorage.setItem(`bookings_${user?.id}`, JSON.stringify(existingBookings));
+
+                  toast({
+                    title: "Blockchain Payment Successful! 🎉",
+                    description: `Secure payment processed. Transaction ID: ${transaction.id.substring(0, 8)}...`,
+                    duration: 5000
+                  });
+
+                  setShowBookingModal(false);
+                  setPaymentStep('details');
+                  setTimeout(() => navigate('/my-bookings'), 2000);
+                }}
+              />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <DollarSign className="h-6 w-6 text-primary" />
+                    Complete Traditional Payment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-lg">
+                    <h3 className="font-bold text-lg mb-2">{selectedBooking.name}</h3>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      <p>{checkInDate} to {checkOutDate} • {numberOfGuests} Guest{parseInt(numberOfGuests) > 1 ? 's' : ''}</p>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <span className="text-sm text-muted-foreground">Total Amount:</span>
+                      <span className="text-xl font-bold text-primary">{selectedBooking.price}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold mb-2">Payment Options</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <span>Credit/Debit Card</span>
+                        <Badge variant="secondary">Secure</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <span>UPI Payment</span>
+                        <Badge variant="secondary">Instant</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <span>Net Banking</span>
+                        <Badge variant="secondary">Trusted</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    onClick={confirmBooking}
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Complete Payment & Book
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       )}
     </div>
