@@ -15,7 +15,7 @@
 | 2410030170   | Tanish Oberoi          |
 | 2410030304   | Shreesh                |
 | 2410030533   | Pakkireddy Nihal Reddy |
-| 2410030020   | Sriya Gayatri          |
+| 2410030020   | SRIYA GAYATRI          |
 | 2410030057   | Kulkarni Sahithi       |
 
 ## Overview
@@ -24,8 +24,8 @@ ROOTSnROUTES is a modern web application that transforms tourism in Jharkhand by
 
 ## Key Features
 
-- **AI Trip Planning** - Personalized itineraries with 94% accuracy using machine learning
-- **Virtual Previews** - AR/VR experiences for destinations and accommodations
+- **AI Trip Planning :** - Personalized itineraries with 94% accuracy using machine learning
+- **Virtual Previews :** - AR/VR experiences for destinations and accommodations
 - **Secure Payments** - Blockchain integration for transparent transactions
 - **Local Marketplace** - Direct connection with verified artisans and homestays
 - **Multi-language Support** - Available in 7 languages including tribal dialects
